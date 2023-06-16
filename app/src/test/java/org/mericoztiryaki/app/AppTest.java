@@ -1,4 +1,4 @@
-package org.mericoztiryaki;
+package org.mericoztiryaki.app;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
