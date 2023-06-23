@@ -30,7 +30,6 @@ public class PriceService implements IPriceService {
 
         // Return directly from cache
         if (prices.containsKey(date)) {
-            System.out.println("Price cache HIT : " + instrument + " " + date);
             return prices.get(date);
         }
 

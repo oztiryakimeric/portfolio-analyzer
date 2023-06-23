@@ -40,7 +40,7 @@ public class ReportService implements IReportService {
         Portfolio portfolio = portfolios.get(reportParameters.getReportDate());
 
         for (Wallet wallet: portfolio.getWallets()) {
-
+            wallet.setPrice(priceService.getPrice(wallet.getInstrument(), reportParameters.getReportDate()));
 
             wallet.setTotalValue(new ReportCalculator(transactions, reportParameters.getReportDate())
                     .calculateTotalValue());

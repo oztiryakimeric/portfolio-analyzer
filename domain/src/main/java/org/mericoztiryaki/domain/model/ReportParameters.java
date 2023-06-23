@@ -2,6 +2,7 @@ package org.mericoztiryaki.domain.model;
 
 import lombok.Builder;
 import lombok.Data;
+import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.transaction.TransactionDefinition;
 
@@ -18,5 +19,7 @@ public class ReportParameters {
     private LocalDate reportDate;
 
     private Set<Period> periods;
+
+    private Currency currency;
 
 }

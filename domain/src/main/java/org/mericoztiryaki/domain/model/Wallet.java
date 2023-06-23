@@ -8,8 +8,6 @@ import org.mericoztiryaki.domain.model.constant.TransactionType;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,13 +17,11 @@ import java.util.Map;
 @AllArgsConstructor
 public class Wallet {
 
-    private final LocalDate date;
-
     private final Instrument instrument;
 
-    private final BigDecimal amount;
-
     private final List<ITransaction> transactions;
+
+    private Quotes price;
 
     // Calculations
     private Quotes totalValue;
