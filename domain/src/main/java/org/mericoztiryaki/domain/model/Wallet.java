@@ -19,8 +19,6 @@ import java.util.Map;
 @AllArgsConstructor
 public class Wallet {
 
-    private String id;
-
     private final LocalDate date;
 
     private final Instrument instrument;
@@ -29,38 +27,11 @@ public class Wallet {
 
     private final List<ITransaction> transactions;
 
-    private final List<ITransaction> inDayTransactions;
+    // Calculations
+    private Quotes totalValue;
 
-    private Map<Period, List<ITransaction>> periods;
+    private Map<Period, Quotes> pnlCalculation = new HashMap<>();
 
-    private Map<Period, Quotes> pnlCalculation;
+    private Map<Period, Quotes> roiCalculation = new HashMap<>();
 
-    private Map<Period, Quotes> roiCalculation;
-
-    public Wallet(String id, LocalDate date, Instrument instrument, BigDecimal amount, List<ITransaction> transactions,
-                  List<ITransaction> inDayTransactions) {
-        this(date, instrument, amount, transactions, inDayTransactions);
-        this.id = id;
-    }
-
-    public BigDecimal getAmountWithInDayTransactions() {
-        BigDecimal inDayTransactionsTotalAmount = inDayTransactions.stream()
-                .map(t -> t.getAmount().multiply(t.getTransactionType() == TransactionType.BUY ?
-                        BigDecimal.ONE : BigDecimal.ONE.negate()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return this.amount.add(inDayTransactionsTotalAmount);
-    }
-
-    public List<ITransaction> getAllTransactions() {
-        List<ITransaction> unifiedTransactions = new ArrayList<>(transactions);
-        unifiedTransactions.addAll(inDayTransactions);
-        return unifiedTransactions;
-    }
-
-    public Wallet nextDaysWallet() {
-        List<ITransaction> nextDaysTransactions = new ArrayList<>(transactions);
-        nextDaysTransactions.addAll(inDayTransactions);
-        return new Wallet(id, date.plusDays(1), instrument, amount, nextDaysTransactions, new ArrayList<>());
-    }
 }

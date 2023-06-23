@@ -70,10 +70,7 @@ public class WalletService implements IWalletService {
                     .stream()
                     .map(instrument -> {
                         InstrumentBucket bucket = walletMap.get(instrument);
-                        Wallet w = new Wallet(d, instrument, bucket.getCumulativeAmount(), bucket.getTransactions(),
-                                bucket.getInDayTransactions());
-                        w.setId(instrument.getId());
-                        return w;
+                        return new Wallet(d, instrument, bucket.getCumulativeAmount(), bucket.getTransactions());
                     })
                     .collect(Collectors.toList());
             portfolio.setWallets(wallets);
