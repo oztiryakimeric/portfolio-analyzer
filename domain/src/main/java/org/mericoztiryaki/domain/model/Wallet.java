@@ -21,6 +21,8 @@ public class Wallet {
 
     private final List<ITransaction> transactions;
 
+    private BigDecimal totalAmount;
+
     private Quotes price;
 
     // Calculations

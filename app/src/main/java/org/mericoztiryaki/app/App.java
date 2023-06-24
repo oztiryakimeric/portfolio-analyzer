@@ -1,6 +1,11 @@
 package org.mericoztiryaki.app;
 
+import de.vandermeer.asciitable.AT_Row;
 import de.vandermeer.asciitable.AsciiTable;
+import de.vandermeer.asciitable.CWC_AbsoluteEven;
+import de.vandermeer.asciitable.CWC_LongestWordMin;
+import de.vandermeer.asciithemes.a7.A7_Grids;
+import de.vandermeer.skb.interfaces.transformers.textformat.TextAlignment;
 import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.*;
 import org.mericoztiryaki.domain.model.constant.Currency;
@@ -9,6 +14,8 @@ import org.mericoztiryaki.domain.model.transaction.TransactionDefinition;
 import org.mericoztiryaki.domain.service.impl.ReportService;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -43,24 +50,52 @@ public class App {
         return rawCsvFile.stream()
                 .map(row -> new TransactionDefinition(row.get(0), row.get(1), row.get(2), row.get(3), row.get(4),
                         row.get(5), row.get(6), row.get(7)))
+                .filter(row -> !row.getInstrumentType().equals("FUND"))
                 .collect(Collectors.toList());
     }
 
     private static String renderReport(Portfolio portfolio, ReportParameters reportParameters) {
         AsciiTable at = new AsciiTable();
-        at.addRule();
-        at.addRow("Instrument", "Price", "Total Value", "All PNL", "All ROI");
+        at.getRenderer().setCWC(new CWC_LongestWordMin(12));
 
-        for (Wallet w: portfolio.getWallets()) {
-            at.addRule();
-            at.addRow(
-                    String.valueOf(w.getInstrument().getSymbol()),
-                    String.valueOf(w.getPrice().getValue().get(reportParameters.getCurrency())),
-                    String.valueOf(w.getTotalValue().getValue().get(reportParameters.getCurrency())),
-                    String.valueOf(w.getPnlCalculation().get(Period.ALL).getValue().get(reportParameters.getCurrency())),
-                    String.valueOf(w.getRoiCalculation().get(Period.ALL).getValue().get(reportParameters.getCurrency()))
-            );
-        }
+        at.addRule();
+        AT_Row topHeader = at.addRow(null, null, null, "", null, null, null, "PNL (" + reportParameters.getCurrency() + ")", null, null, null, "ROI (%)");
+        topHeader.getCells().get(7).getContext().setTextAlignment(TextAlignment.CENTER);
+        topHeader.getCells().get(11).getContext().setTextAlignment(TextAlignment.CENTER);
+
+        at.addRule();
+        AT_Row header = at.addRow(
+                "Instrument",
+                "Price(" + reportParameters.getCurrency() + ")",
+                "Amount",
+                "Value(" + reportParameters.getCurrency() + ")",
+                "ALL", "1M", "1W", "1D",
+                "ALL", "1M", "1W", "1D"
+        );
+
+        DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");
+        DecimalFormat rateFormat = new DecimalFormat("#0.00");
+
+        portfolio.getWallets().stream()
+                .filter(w -> !w.getTotalAmount().equals(BigDecimal.ZERO))
+                .forEach(w -> {
+                    at.addRule();
+                    AT_Row row = at.addRow(
+                            String.valueOf(w.getInstrument().getSymbol()),
+                            String.valueOf(w.getPrice().getValue().get(reportParameters.getCurrency())),
+                            String.valueOf(w.getTotalAmount()),
+                            currencyFormat.format(w.getTotalValue().getValue().get(reportParameters.getCurrency())),
+                            currencyFormat.format(w.getPnlCalculation().get(Period.ALL).getValue().get(reportParameters.getCurrency())),
+                            currencyFormat.format(w.getPnlCalculation().get(Period.M1).getValue().get(reportParameters.getCurrency())),
+                            currencyFormat.format(w.getPnlCalculation().get(Period.W1).getValue().get(reportParameters.getCurrency())),
+                            currencyFormat.format(w.getPnlCalculation().get(Period.D1).getValue().get(reportParameters.getCurrency())),
+                            rateFormat.format(w.getRoiCalculation().get(Period.ALL).getValue().get(reportParameters.getCurrency())),
+                            rateFormat.format(w.getRoiCalculation().get(Period.M1).getValue().get(reportParameters.getCurrency())),
+                            rateFormat.format(w.getRoiCalculation().get(Period.W1).getValue().get(reportParameters.getCurrency())),
+                            rateFormat.format(w.getRoiCalculation().get(Period.D1).getValue().get(reportParameters.getCurrency()))
+                    );
+                });
+        at.addRule();
 
         return at.render();
     }

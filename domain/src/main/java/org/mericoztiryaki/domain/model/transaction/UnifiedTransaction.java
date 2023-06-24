@@ -2,6 +2,7 @@ package org.mericoztiryaki.domain.model.transaction;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.constant.TransactionType;
@@ -21,7 +22,8 @@ public class UnifiedTransaction implements ITransaction {
 
     private final Instrument instrument;
 
-    private final Quotes purchasePrice;
+    @Setter
+    private Quotes purchasePrice;
 
     private BigDecimal amount = BigDecimal.ZERO;
 

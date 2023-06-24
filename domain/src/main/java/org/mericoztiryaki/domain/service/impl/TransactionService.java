@@ -29,7 +29,7 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public ITransaction buildTransactionObject(TransactionDefinition definition) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
         LocalDateTime transactionTime = LocalDateTime.parse(definition.getDate(), formatter);
         Currency transactionCurrency = Currency.valueOf(definition.getCurrency());
@@ -38,11 +38,11 @@ public class TransactionService implements ITransactionService {
                 transactionTime,
                 new Instrument(InstrumentType.valueOf(definition.getInstrumentType()), definition.getSymbol()),
                 TransactionType.valueOf(definition.getTransactionType()),
-                new BigDecimal(definition.getAmount()),
+                new BigDecimal(definition.getAmount().replace(",", "")),
                 exchangeService.exchange(transactionTime.toLocalDate(),
-                        new BigDecimal(definition.getPurchasePrice()), transactionCurrency),
+                        new BigDecimal(definition.getPurchasePrice().replace(",", "")), transactionCurrency),
                 exchangeService.exchange(transactionTime.toLocalDate(),
-                        new BigDecimal(definition.getCommissionPrice()), transactionCurrency),
+                        new BigDecimal(definition.getCommissionPrice().replace(",", "")), transactionCurrency),
                 transactionCurrency);
     }
 
@@ -69,12 +69,10 @@ public class TransactionService implements ITransactionService {
         LocalDate periodStart = getPeriodStart(periodClose, period, transactions.get(0));
         Instrument instrument = transactions.get(0).getInstrument();
 
-        UnifiedTransaction unifiedTransaction = new UnifiedTransaction(periodStart.atStartOfDay(), instrument,
-                priceService.getPrice(instrument, periodStart));
+        UnifiedTransaction unifiedTransaction = new UnifiedTransaction(periodStart.atStartOfDay(), instrument);
         List<ITransaction> transactionHappenedInPeriod = new ArrayList<>();
 
         for (ITransaction t: transactions) {
-
             if (t.getDate().toLocalDate().isBefore(periodStart) || t.getDate().toLocalDate().isEqual(periodStart)) {
                 // Transactions happened before period
                 unifiedTransaction.addTransaction(t);
@@ -83,6 +81,11 @@ public class TransactionService implements ITransactionService {
             }
         }
 
+        if (unifiedTransaction.getAmount().equals(BigDecimal.ZERO) && transactionHappenedInPeriod.size() == 0) {
+            return null;
+        }
+
+        unifiedTransaction.setPurchasePrice(priceService.getPrice(instrument, periodStart));
         transactionHappenedInPeriod.add(0, unifiedTransaction);
         return transactionHappenedInPeriod;
     }

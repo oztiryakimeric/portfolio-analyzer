@@ -12,9 +12,9 @@ public class TransactionDefinition {
 
     private String instrumentType;
 
-    private String transactionType;
-
     private String symbol;
+
+    private String transactionType;
 
     private String amount;
 

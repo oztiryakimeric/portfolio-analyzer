@@ -11,7 +11,6 @@ import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.service.IPriceService;
 import org.mericoztiryaki.domain.util.Environment;
 
-import java.io.IOException;;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.time.LocalDate;
@@ -45,8 +44,9 @@ public class PriceService implements IPriceService {
     }
 
     private Map<LocalDate, Quotes> fetchPrices(Instrument instrument, LocalDate date) {
+        LocalDate end = !date.isEqual(LocalDate.now()) ? LocalDate.now().minusDays(1) : date;
         PriceListResponse response = getPriceWindow(instrument.getInstrumentType(), instrument.getSymbol(),
-                date.minusDays(30), date.plusDays(30));
+                date.minusDays(365 * 2), end);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         Map<LocalDate, Quotes> prices = new HashMap<>();
@@ -92,7 +92,7 @@ public class PriceService implements IPriceService {
         try(ResponseBody response = call.execute().body()) {
             Gson gson = new Gson();
             return gson.fromJson(response.string(), PriceListResponse.class);
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("Price api exception: " + url);
             e.printStackTrace();
             throw new PriceApiException(instrumentType, symbol, start, end);
@@ -107,8 +107,6 @@ public class PriceService implements IPriceService {
         @Data
         public static class PriceResponse {
             private String day;
-            private String type;
-            private String symbol;
             private Map<String, String> quotes;
         }
     }
