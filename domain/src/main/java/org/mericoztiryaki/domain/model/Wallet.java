@@ -14,7 +14,6 @@ import java.util.Map;
 
 @Data
 @RequiredArgsConstructor
-@AllArgsConstructor
 public class Wallet {
 
     private final Instrument instrument;
@@ -25,7 +24,8 @@ public class Wallet {
 
     private Quotes price;
 
-    // Calculations
+    private Quotes unitCost;
+
     private Quotes totalValue;
 
     private Map<Period, Quotes> pnlCalculation = new HashMap<>();

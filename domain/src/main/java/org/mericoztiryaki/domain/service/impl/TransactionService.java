@@ -1,6 +1,8 @@
 package org.mericoztiryaki.domain.service.impl;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.mericoztiryaki.domain.model.*;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
@@ -95,5 +97,45 @@ public class TransactionService implements ITransactionService {
             return periodClose.minusDays(period.getDayCount());
         }
         return firstTransaction.getDate().toLocalDate().minusDays(1);
+    }
+
+    @Override
+    public Map<Instrument, List<ITransaction>> getOpenPositions(List<ITransaction> transactions) {
+        List<ITransaction> sortedTransactions = transactions
+                .stream()
+                .sorted(Comparator.comparing(ITransaction::getDate))
+                .collect(Collectors.toList());
+
+        Map<Instrument, InstrumentBucket> buckets = new HashMap<>();
+
+        for (ITransaction transaction: sortedTransactions) {
+            InstrumentBucket bucket =
+                    buckets.computeIfAbsent(transaction.getInstrument(), (key) -> new InstrumentBucket());
+
+            bucket.addTransaction(transaction);
+
+            if (bucket.getCumulativeAmount() == BigDecimal.ZERO) {
+                buckets.put(transaction.getInstrument(), new InstrumentBucket());
+            }
+        }
+
+        return buckets.entrySet()
+                .stream()
+                .filter(e -> e.getValue().getCumulativeAmount() != BigDecimal.ZERO)
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getTransactions()));
+    }
+
+    @Getter
+    private static class InstrumentBucket {
+        private BigDecimal cumulativeAmount = BigDecimal.ZERO;
+        private List<ITransaction> transactions = new ArrayList<>();
+
+        public void addTransaction(ITransaction transaction) {
+            this.transactions.add(transaction);
+            this.cumulativeAmount = transaction.getTransactionType() == TransactionType.BUY ?
+                    this.cumulativeAmount.add(transaction.getAmount()) :
+                    this.cumulativeAmount.subtract(transaction.getAmount());
+        }
+
     }
 }

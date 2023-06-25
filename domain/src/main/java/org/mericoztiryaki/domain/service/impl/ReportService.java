@@ -1,20 +1,18 @@
 package org.mericoztiryaki.domain.service.impl;
 
+import lombok.Getter;
 import org.mericoztiryaki.domain.model.*;
 import org.mericoztiryaki.domain.model.constant.Period;
+import org.mericoztiryaki.domain.model.constant.TransactionType;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
-import org.mericoztiryaki.domain.model.Portfolio;
-import org.mericoztiryaki.domain.model.transaction.UnifiedTransaction;
 import org.mericoztiryaki.domain.service.*;
 import org.mericoztiryaki.domain.util.QuotesUtil;
-import org.mericoztiryaki.domain.util.TransactionUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.stream.Collectors;
 
 public class ReportService implements IReportService {
@@ -22,99 +20,115 @@ public class ReportService implements IReportService {
     private final IPriceService priceService;
     private final IExchangeService exchangeService;
     private final ITransactionService transactionService;
-    private final IWalletService walletService;
 
     public ReportService() {
         this.priceService = new PriceService();
         this.exchangeService = new ExchangeService(priceService);
         this.transactionService = new TransactionService(this.priceService, exchangeService);
-        this.walletService = new WalletService();
     }
 
     @Override
-    public Portfolio generateReport(ReportParameters reportParameters) {
+    public Report generateReport(ReportParameters reportParameters) {
         List<ITransaction> transactions = reportParameters.getTransactions()
                 .stream().map(def -> transactionService.buildTransactionObject(def))
                 .sorted(Comparator.comparing(ITransaction::getDate))
                 .collect(Collectors.toList());
 
-        SortedMap<LocalDate, Portfolio> portfolios = this.walletService.calculatePortfolios(transactions);
+        List<Wallet> openPositions = transactionService.getOpenPositions(transactions)
+                .entrySet()
+                .stream()
+                .map(e -> {
+                    Wallet wallet = new Wallet(e.getKey(), e.getValue());
+                    ReportCalculator walletCalculator = new ReportCalculator(wallet.getTransactions(), reportParameters.getReportDate());
 
-        Portfolio portfolio = portfolios.get(reportParameters.getReportDate());
+                    wallet.setTotalAmount(walletCalculator.getTotalAmount());
+                    wallet.setTotalValue(walletCalculator.calculateTotalValue());
+                    wallet.setUnitCost(walletCalculator.calculateUnitCost());
 
-        for (Wallet wallet: portfolio.getWallets()) {
-            ReportCalculator walletCalculator = new ReportCalculator(wallet.getTransactions(), reportParameters.getReportDate());
+                    if (!wallet.getTotalAmount().equals(BigDecimal.ZERO)) {
+                        wallet.setPrice(priceService.getPrice(wallet.getInstrument(), reportParameters.getReportDate()));
+                    }
 
-            wallet.setTotalAmount(walletCalculator.transactionUtil.getTotalAmount());
-            wallet.setTotalValue(walletCalculator.calculateTotalValue());
+                    Map<Period, List<ITransaction>> dividedTransactions = transactionService.createTransactionSetsByPeriods(
+                            wallet.getTransactions(), reportParameters.getPeriods(), reportParameters.getReportDate());
+                    for (Period period: reportParameters.getPeriods()) {
+                        List<ITransaction> transactionsOfPeriod = dividedTransactions.get(period);
+                        if (transactionsOfPeriod != null) {
+                            ReportCalculator calculator = new ReportCalculator(transactionsOfPeriod,
+                                    reportParameters.getReportDate());
 
-            if (!wallet.getTotalAmount().equals(BigDecimal.ZERO)) {
-                wallet.setPrice(priceService.getPrice(wallet.getInstrument(), reportParameters.getReportDate()));
-            }
+                            wallet.getPnlCalculation().put(period, calculator.calculatePNL());
+                            wallet.getRoiCalculation().put(period, calculator.calculateROI());
+                        }
+                    }
+                    return wallet;
+                })
+                .collect(Collectors.toList());
 
-            Map<Period, List<ITransaction>> dividedTransactions = transactionService.createTransactionSetsByPeriods(
-                    wallet.getTransactions(), reportParameters.getPeriods(), reportParameters.getReportDate());
-            for (Period period: reportParameters.getPeriods()) {
-                List<ITransaction> transactionsOfPeriod = dividedTransactions.get(period);
-                if (transactionsOfPeriod != null) {
-                    ReportCalculator calculator = new ReportCalculator(transactionsOfPeriod,
-                            reportParameters.getReportDate());
-
-                    wallet.getPnlCalculation().put(period, calculator.calculatePNL());
-                    wallet.getRoiCalculation().put(period, calculator.calculateROI());
-                }
-            }
-        }
-
-        return portfolio;
+        return new Report(openPositions);
     }
 
+    @Getter
     public class ReportCalculator {
         private final List<ITransaction> transactions;
         private final LocalDate portfolioDate;
-        private final TransactionUtil transactionUtil;
+
+        private Quotes totalCost = Quotes.ZERO;
+        private Quotes totalIncome = Quotes.ZERO;
+        private BigDecimal totalAmount = BigDecimal.ZERO;
 
         public ReportCalculator(List<ITransaction> transactions, LocalDate portfolioDate) {
             this.transactions = transactions;
             this.portfolioDate = portfolioDate;
-            this.transactionUtil = new TransactionUtil(transactions);
+            this.calculate();
+        }
+
+        public void calculate() {
+            for (ITransaction t: transactions) {
+                if (t.getTransactionType() == TransactionType.BUY) {
+                    totalCost = QuotesUtil.add(
+                            totalCost,
+                            QuotesUtil.multiply(t.getPurchasePrice(), t.getAmount())
+                    );
+                    totalAmount = totalAmount.add(t.getAmount());
+                } else {
+                    totalIncome = QuotesUtil.add(
+                            totalIncome,
+                            QuotesUtil.multiply(t.getPurchasePrice(), t.getAmount())
+                    );
+                    totalAmount = totalAmount.subtract(t.getAmount());
+                }
+            }
         }
 
         public Quotes calculateTotalValue() {
-            if (transactionUtil.getTotalAmount().equals(BigDecimal.ZERO)) {
+            if (totalAmount.equals(BigDecimal.ZERO)) {
                 return Quotes.ZERO;
             }
 
             Quotes price = priceService.getPrice(transactions.get(0).getInstrument(), portfolioDate);
-            return QuotesUtil.multiply(price, transactionUtil.getTotalAmount());
+            return QuotesUtil.multiply(price, totalAmount);
         }
 
         public Quotes calculatePNL() {
-            if (!applicable()) {
-                return null;
-            }
             return QuotesUtil.subtract(
-                    QuotesUtil.add(transactionUtil.getTotalIncome(), calculateTotalValue()),
-                    transactionUtil.getTotalCost()
+                    QuotesUtil.add(totalIncome, calculateTotalValue()),
+                    totalCost
             );
         }
 
         public Quotes calculateROI() {
-            if (!applicable()) {
-                return null;
-            }
             return QuotesUtil.multiply(
-                    QuotesUtil.divide(calculatePNL(), transactionUtil.getTotalCost()),
+                    QuotesUtil.divide(calculatePNL(), totalCost),
                     new BigDecimal(100)
             );
         }
 
-        private boolean applicable() {
-            boolean isClosedTrade = !(this.transactions.size() == 1
-                    && this.transactions.get(0) instanceof UnifiedTransaction
-                    && this.transactionUtil.getTotalAmount().equals(BigDecimal.ZERO));
-
-            return isClosedTrade;
+        public Quotes calculateUnitCost() {
+            return QuotesUtil.divide(
+                    QuotesUtil.subtract(calculateTotalValue(), calculatePNL()),
+                    totalAmount
+            );
         }
     }
 

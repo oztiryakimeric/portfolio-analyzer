@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,11 +34,11 @@ public class App {
                 .currency(Currency.TRY)
                 .build();
 
-        Portfolio portfolio = new ReportService().generateReport(parameters);
+        Report report = new ReportService().generateReport(parameters);
         System.out.println();
         System.out.println();
 
-        System.out.println(renderReport(portfolio, parameters));
+        System.out.println(renderReport(report, parameters));
 
         System.out.println();
         System.out.println();
@@ -54,12 +55,12 @@ public class App {
                 .collect(Collectors.toList());
     }
 
-    private static String renderReport(Portfolio portfolio, ReportParameters reportParameters) {
+    private static String renderReport(Report report, ReportParameters reportParameters) {
         AsciiTable at = new AsciiTable();
         at.getRenderer().setCWC(new CWC_LongestWordMin(12));
 
         at.addRule();
-        AT_Row topHeader = at.addRow(null, null, null, "", null, null, null, "PNL (" + reportParameters.getCurrency() + ")", null, null, null, "ROI (%)");
+        AT_Row topHeader = at.addRow(null, null, null, null, "", null, null, null, "PNL (" + reportParameters.getCurrency() + ")", null, null, null, "ROI (%)");
         topHeader.getCells().get(7).getContext().setTextAlignment(TextAlignment.CENTER);
         topHeader.getCells().get(11).getContext().setTextAlignment(TextAlignment.CENTER);
 
@@ -67,6 +68,7 @@ public class App {
         AT_Row header = at.addRow(
                 "Instrument",
                 "Price(" + reportParameters.getCurrency() + ")",
+                "Cost",
                 "Amount",
                 "Value(" + reportParameters.getCurrency() + ")",
                 "ALL", "1M", "1W", "1D",
@@ -76,13 +78,15 @@ public class App {
         DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");
         DecimalFormat rateFormat = new DecimalFormat("#0.00");
 
-        portfolio.getWallets().stream()
+        report.getOpenPositions().stream()
                 .filter(w -> !w.getTotalAmount().equals(BigDecimal.ZERO))
+                .sorted(Comparator.comparing(w -> w.getInstrument().getSymbol()))
                 .forEach(w -> {
                     at.addRule();
                     AT_Row row = at.addRow(
                             String.valueOf(w.getInstrument().getSymbol()),
-                            String.valueOf(w.getPrice().getValue().get(reportParameters.getCurrency())),
+                            currencyFormat.format(w.getPrice().getValue().get(reportParameters.getCurrency())),
+                            currencyFormat.format(w.getUnitCost().getValue().get(reportParameters.getCurrency())),
                             String.valueOf(w.getTotalAmount()),
                             currencyFormat.format(w.getTotalValue().getValue().get(reportParameters.getCurrency())),
                             currencyFormat.format(w.getPnlCalculation().get(Period.ALL).getValue().get(reportParameters.getCurrency())),
