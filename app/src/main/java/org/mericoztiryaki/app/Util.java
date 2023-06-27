@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Util {
 
-    public static List<List<String>> readCSVFile(String filePath) throws IOException {
+    public static List<List<String>> readTsvFile(String filePath) throws IOException {
         List<List<String>> data = new ArrayList<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {

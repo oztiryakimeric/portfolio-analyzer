@@ -2,9 +2,7 @@ package org.mericoztiryaki.app;
 
 import de.vandermeer.asciitable.AT_Row;
 import de.vandermeer.asciitable.AsciiTable;
-import de.vandermeer.asciitable.CWC_AbsoluteEven;
 import de.vandermeer.asciitable.CWC_LongestWordMin;
-import de.vandermeer.asciithemes.a7.A7_Grids;
 import de.vandermeer.skb.interfaces.transformers.textformat.TextAlignment;
 import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.*;
@@ -46,7 +44,7 @@ public class App {
     }
 
     private static List<TransactionDefinition> readTransactions() throws IOException {
-        List<List<String>> rawCsvFile = Util.readCSVFile(".dev-space/dev-portfolio-1.csv");
+        List<List<String>> rawCsvFile = Util.readTsvFile(".dev-space/dev-portfolio-1.csv");
 
         return rawCsvFile.stream()
                 .map(row -> new TransactionDefinition(row.get(0), row.get(1), row.get(2), row.get(3), row.get(4),

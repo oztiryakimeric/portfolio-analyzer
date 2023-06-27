@@ -2,7 +2,6 @@ package org.mericoztiryaki.domain.service.impl;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.mericoztiryaki.domain.model.*;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
@@ -42,43 +41,42 @@ public class TransactionService implements ITransactionService {
                 TransactionType.valueOf(definition.getTransactionType()),
                 new BigDecimal(definition.getAmount().replace(",", "")),
                 exchangeService.exchange(transactionTime.toLocalDate(),
-                        new BigDecimal(definition.getPurchasePrice().replace(",", "")), transactionCurrency),
+                        new BigDecimal(definition.getPurchasePrice().replace(",", "")),
+                        transactionCurrency
+                ),
                 exchangeService.exchange(transactionTime.toLocalDate(),
-                        new BigDecimal(definition.getCommissionPrice().replace(",", "")), transactionCurrency),
+                        new BigDecimal(definition.getCommissionPrice().replace(",", "")),
+                        transactionCurrency
+                ),
                 transactionCurrency);
     }
 
     @Override
-    public Map<Period, List<ITransaction>> createTransactionSetsByPeriods(List<ITransaction> transactions, Set<Period> periods,
-                                                                          LocalDate portfolioDate) {
-        List<ITransaction> sortedTransactions = transactions
-                .stream()
-                .sorted(Comparator.comparing(ITransaction::getDate))
-                .collect(Collectors.toList());
-
+    public Map<Period, List<ITransaction>> createTransactionSetsByPeriods(List<ITransaction> transactions,
+                                                                          Set<Period> periods, LocalDate portfolioDate) {
         Map<Period, List<ITransaction>> transactionSets = new HashMap<>();
-        periods.forEach(period -> transactionSets.put(period, createTransactionSet(sortedTransactions, period, portfolioDate)));
+
+        periods.forEach(period -> {
+            LocalDate periodStart = period != Period.ALL ? portfolioDate.minusDays(period.getDayCount()) :
+                    transactions.get(0).getDate().toLocalDate().minusDays(1);
+
+            transactionSets.put(period, createTransactionSetByWindow(transactions, periodStart, portfolioDate));
+        });
 
         return transactionSets;
     }
 
-    private List<ITransaction> createTransactionSet(List<ITransaction> transactions, Period period, LocalDate portfolioDate) {
-        if (transactions.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        LocalDate periodClose = portfolioDate;
-        LocalDate periodStart = getPeriodStart(periodClose, period, transactions.get(0));
+    private List<ITransaction> createTransactionSetByWindow(List<ITransaction> transactions, LocalDate start,
+                                                            LocalDate end) {
         Instrument instrument = transactions.get(0).getInstrument();
-
-        UnifiedTransaction unifiedTransaction = new UnifiedTransaction(periodStart.atStartOfDay(), instrument);
+        UnifiedTransaction unifiedTransaction = new UnifiedTransaction(start.atStartOfDay(), instrument);
         List<ITransaction> transactionHappenedInPeriod = new ArrayList<>();
 
         for (ITransaction t: transactions) {
-            if (t.getDate().toLocalDate().isBefore(periodStart) || t.getDate().toLocalDate().isEqual(periodStart)) {
+            if (t.getDate().toLocalDate().isBefore(start) || t.getDate().toLocalDate().isEqual(start)) {
                 // Transactions happened before period
                 unifiedTransaction.addTransaction(t);
-            } else if (t.getDate().toLocalDate().isBefore(periodClose) || t.getDate().toLocalDate().isEqual(periodClose)) {
+            } else if (t.getDate().toLocalDate().isBefore(end) || t.getDate().toLocalDate().isEqual(end)) {
                 transactionHappenedInPeriod.add(t);
             }
         }
@@ -87,28 +85,16 @@ public class TransactionService implements ITransactionService {
             return null;
         }
 
-        unifiedTransaction.setPurchasePrice(priceService.getPrice(instrument, periodStart));
+        unifiedTransaction.setPurchasePrice(priceService.getPrice(instrument, start));
         transactionHappenedInPeriod.add(0, unifiedTransaction);
         return transactionHappenedInPeriod;
     }
 
-    private LocalDate getPeriodStart(LocalDate periodClose, Period period, ITransaction firstTransaction) {
-        if (period != Period.ALL) {
-            return periodClose.minusDays(period.getDayCount());
-        }
-        return firstTransaction.getDate().toLocalDate().minusDays(1);
-    }
-
     @Override
     public Map<Instrument, List<ITransaction>> getOpenPositions(List<ITransaction> transactions) {
-        List<ITransaction> sortedTransactions = transactions
-                .stream()
-                .sorted(Comparator.comparing(ITransaction::getDate))
-                .collect(Collectors.toList());
-
         Map<Instrument, InstrumentBucket> buckets = new HashMap<>();
 
-        for (ITransaction transaction: sortedTransactions) {
+        for (ITransaction transaction: transactions) {
             InstrumentBucket bucket =
                     buckets.computeIfAbsent(transaction.getInstrument(), (key) -> new InstrumentBucket());
 
