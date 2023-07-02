@@ -11,7 +11,6 @@ import org.mericoztiryaki.domain.model.transaction.ITransaction;
 import org.mericoztiryaki.domain.model.transaction.Transaction;
 import org.mericoztiryaki.domain.model.transaction.TransactionDefinition;
 import org.mericoztiryaki.domain.model.transaction.UnifiedTransaction;
-import org.mericoztiryaki.domain.service.IExchangeService;
 import org.mericoztiryaki.domain.service.IPriceService;
 import org.mericoztiryaki.domain.service.ITransactionService;
 
@@ -26,7 +25,6 @@ import java.util.stream.Collectors;
 public class TransactionService implements ITransactionService {
 
     private final IPriceService priceService;
-    private final IExchangeService exchangeService;
 
     @Override
     public ITransaction buildTransactionObject(TransactionDefinition definition) {
@@ -40,11 +38,11 @@ public class TransactionService implements ITransactionService {
                 new Instrument(InstrumentType.valueOf(definition.getInstrumentType()), definition.getSymbol()),
                 TransactionType.valueOf(definition.getTransactionType()),
                 new BigDecimal(definition.getAmount().replace(",", "")),
-                exchangeService.exchange(transactionTime.toLocalDate(),
+                priceService.calculateExchangeRates(transactionTime.toLocalDate(),
                         new BigDecimal(definition.getPurchasePrice().replace(",", "")),
                         transactionCurrency
                 ),
-                exchangeService.exchange(transactionTime.toLocalDate(),
+                priceService.calculateExchangeRates(transactionTime.toLocalDate(),
                         new BigDecimal(definition.getCommissionPrice().replace(",", "")),
                         transactionCurrency
                 ),

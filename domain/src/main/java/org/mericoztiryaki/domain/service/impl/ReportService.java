@@ -17,13 +17,11 @@ import java.util.stream.Collectors;
 public class ReportService implements IReportService {
 
     private final IPriceService priceService;
-    private final IExchangeService exchangeService;
     private final ITransactionService transactionService;
 
     public ReportService() {
         this.priceService = new PriceService();
-        this.exchangeService = new ExchangeService(priceService);
-        this.transactionService = new TransactionService(this.priceService, exchangeService);
+        this.transactionService = new TransactionService(this.priceService);
     }
 
     @Override
@@ -32,18 +30,6 @@ public class ReportService implements IReportService {
                 .stream().map(def -> transactionService.buildTransactionObject(def))
                 .sorted(Comparator.comparing(ITransaction::getDate))
                 .collect(Collectors.toList());
-
-        BigDecimal sum = BigDecimal.ZERO;
-        for (ITransaction t: transactions) {
-            BigDecimal totalPrice = t.getAmount().multiply(t.getPurchasePrice().getValue().get(Currency.TRY));
-            if (t.getTransactionType() == TransactionType.BUY) {
-                sum = sum.subtract(totalPrice);
-            } else {
-                sum = sum.add(totalPrice);
-            }
-        }
-
-        System.out.println(sum);
 
         AggregatedAnalyzeResult aggregatedResult = createTotalsTable(transactions, reportParameters);
         List<InstrumentAnalyzeResult> openPositions = createOpenPositionsTable(transactions, reportParameters);

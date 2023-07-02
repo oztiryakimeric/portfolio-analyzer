@@ -10,6 +10,7 @@ import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.service.IPriceService;
 import org.mericoztiryaki.domain.util.Environment;
+import org.mericoztiryaki.domain.util.QuotesUtil;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -113,6 +114,12 @@ public class PriceService implements IPriceService {
             private String day;
             private Map<String, String> quotes;
         }
+    }
+
+    @Override
+    public Quotes calculateExchangeRates(LocalDate date, BigDecimal price, Currency source) throws PriceApiException {
+        Quotes exchangeRates = getPrice(new Instrument(InstrumentType.CURRENCY, source.toString()), date);
+        return QuotesUtil.multiply(exchangeRates, price);
     }
 
 }
