@@ -9,6 +9,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class Report {
 
-    private final List<Wallet> openPositions;
+    private final AggregatedAnalyzeResult aggregatedResult;
+
+    private final List<InstrumentAnalyzeResult> openPositions;
 
 }

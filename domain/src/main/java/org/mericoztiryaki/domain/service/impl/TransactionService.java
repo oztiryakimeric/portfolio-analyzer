@@ -68,26 +68,58 @@ public class TransactionService implements ITransactionService {
 
     private List<ITransaction> createTransactionSetByWindow(List<ITransaction> transactions, LocalDate start,
                                                             LocalDate end) {
-        Instrument instrument = transactions.get(0).getInstrument();
-        UnifiedTransaction unifiedTransaction = new UnifiedTransaction(start.atStartOfDay(), instrument);
-        List<ITransaction> transactionHappenedInPeriod = new ArrayList<>();
+        Map<Instrument, TransactionSet> transactionSets = new HashMap<>();
 
         for (ITransaction t: transactions) {
+            TransactionSet transactionSet = transactionSets.computeIfAbsent(
+                    t.getInstrument(),
+                    (i) -> new TransactionSet(start.atStartOfDay(), i)
+            );
+
             if (t.getDate().toLocalDate().isBefore(start) || t.getDate().toLocalDate().isEqual(start)) {
-                // Transactions happened before period
-                unifiedTransaction.addTransaction(t);
+               transactionSet.getUnifiedTransaction().addTransaction(t);
             } else if (t.getDate().toLocalDate().isBefore(end) || t.getDate().toLocalDate().isEqual(end)) {
-                transactionHappenedInPeriod.add(t);
+                transactionSet.getTransactionHappenedInPeriod().add(t);
             }
         }
 
-        if (unifiedTransaction.getAmount().equals(BigDecimal.ZERO) && transactionHappenedInPeriod.size() == 0) {
-            return null;
+        return transactionSets.entrySet()
+                .stream()
+                // Filter unnecessary sets
+                .filter(e ->
+                        !(e.getValue().getUnifiedTransaction().getAmount().equals(BigDecimal.ZERO) &&
+                        e.getValue().getTransactionHappenedInPeriod().size() == 0)
+                )
+                .map(e -> {
+                    if (e.getValue().getUnifiedTransaction().getAmount() != BigDecimal.ZERO) {
+                        e.getValue().getUnifiedTransaction().setPurchasePrice(
+                                priceService.getPrice(e.getValue().getUnifiedTransaction().getInstrument(), start));
+                    }
+                    return e.getValue();
+                })
+                .flatMap(e -> e.getTransactions().stream())
+                .sorted(Comparator.comparing(ITransaction::getDate))
+                .collect(Collectors.toList());
+    }
+
+    @Getter
+    private static class TransactionSet {
+        private final UnifiedTransaction unifiedTransaction;
+        private final List<ITransaction> transactionHappenedInPeriod;
+
+        public TransactionSet(LocalDateTime date, Instrument instrument) {
+            this.unifiedTransaction = new UnifiedTransaction(date, instrument);
+            this.transactionHappenedInPeriod = new ArrayList<>();
         }
 
-        unifiedTransaction.setPurchasePrice(priceService.getPrice(instrument, start));
-        transactionHappenedInPeriod.add(0, unifiedTransaction);
-        return transactionHappenedInPeriod;
+        public List<ITransaction> getTransactions() {
+            List<ITransaction> result = new ArrayList<>();
+            if (!this.unifiedTransaction.getAmount().equals(BigDecimal.ZERO)) {
+                result.add(this.unifiedTransaction);
+            }
+            result.addAll(this.transactionHappenedInPeriod);
+            return result;
+        }
     }
 
     @Override

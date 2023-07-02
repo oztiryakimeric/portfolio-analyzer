@@ -1,7 +1,7 @@
 package org.mericoztiryaki.domain.service.impl;
 
-import lombok.Getter;
 import org.mericoztiryaki.domain.model.*;
+import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.constant.TransactionType;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
@@ -9,7 +9,6 @@ import org.mericoztiryaki.domain.service.*;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -34,103 +33,89 @@ public class ReportService implements IReportService {
                 .sorted(Comparator.comparing(ITransaction::getDate))
                 .collect(Collectors.toList());
 
-        List<Wallet> openPositions = transactionService.getOpenPositions(transactions)
+        BigDecimal sum = BigDecimal.ZERO;
+        for (ITransaction t: transactions) {
+            BigDecimal totalPrice = t.getAmount().multiply(t.getPurchasePrice().getValue().get(Currency.TRY));
+            if (t.getTransactionType() == TransactionType.BUY) {
+                sum = sum.subtract(totalPrice);
+            } else {
+                sum = sum.add(totalPrice);
+            }
+        }
+
+        System.out.println(sum);
+
+        AggregatedAnalyzeResult aggregatedResult = createTotalsTable(transactions, reportParameters);
+        List<InstrumentAnalyzeResult> openPositions = createOpenPositionsTable(transactions, reportParameters);
+
+        return new Report(aggregatedResult, openPositions);
+    }
+
+    private List<InstrumentAnalyzeResult> createOpenPositionsTable(List<ITransaction> transactions, ReportParameters reportParameters) {
+        return transactionService.getOpenPositions(transactions)
                 .entrySet()
                 .stream()
                 .map(e -> {
-                    Wallet wallet = new Wallet(e.getKey(), e.getValue());
-                    ReportCalculator walletCalculator = new ReportCalculator(wallet.getTransactions(), reportParameters.getReportDate());
+                    InstrumentAnalyzeResult instrumentAnalyzeResult = new InstrumentAnalyzeResult(e.getKey(), e.getValue());
+                    Analyzer walletAnalyzer = new Analyzer(priceService, instrumentAnalyzeResult.getTransactions(), reportParameters.getReportDate());
 
-                    wallet.setTotalAmount(walletCalculator.getTotalAmount());
-                    wallet.setTotalValue(walletCalculator.calculateTotalValue());
-                    wallet.setUnitCost(walletCalculator.calculateUnitCost());
+                    instrumentAnalyzeResult.setTotalAmount(walletAnalyzer.getTotalAmount());
+                    instrumentAnalyzeResult.setTotalValue(walletAnalyzer.calculateTotalValue());
+                    instrumentAnalyzeResult.setUnitCost(walletAnalyzer.calculateUnitCost());
 
-                    if (!wallet.getTotalAmount().equals(BigDecimal.ZERO)) {
-                        wallet.setPrice(priceService.getPrice(wallet.getInstrument(), reportParameters.getReportDate()));
+                    if (!instrumentAnalyzeResult.getTotalAmount().equals(BigDecimal.ZERO)) {
+                        instrumentAnalyzeResult.setPrice(priceService.getPrice(instrumentAnalyzeResult.getInstrument(), reportParameters.getReportDate()));
                     }
 
                     Map<Period, List<ITransaction>> dividedTransactions = transactionService.createTransactionSetsByPeriods(
-                            wallet.getTransactions(), reportParameters.getPeriods(), reportParameters.getReportDate());
+                            instrumentAnalyzeResult.getTransactions(), reportParameters.getPeriods(), reportParameters.getReportDate());
                     for (Period period: reportParameters.getPeriods()) {
                         List<ITransaction> transactionsOfPeriod = dividedTransactions.get(period);
                         if (transactionsOfPeriod != null) {
-                            ReportCalculator calculator = new ReportCalculator(transactionsOfPeriod,
+                            Analyzer periodAnalyzer = new Analyzer(priceService, transactionsOfPeriod,
                                     reportParameters.getReportDate());
 
-                            wallet.getPnlCalculation().put(period, calculator.calculatePNL());
-                            wallet.getRoiCalculation().put(period, calculator.calculateROI());
+                            instrumentAnalyzeResult.getPnlCalculation().put(period, periodAnalyzer.calculatePNL());
+                            instrumentAnalyzeResult.getRoiCalculation().put(period, periodAnalyzer.calculateROI());
                         }
                     }
-                    return wallet;
+                    return instrumentAnalyzeResult;
                 })
                 .collect(Collectors.toList());
-
-        return new Report(openPositions);
     }
 
-    @Getter
-    public class ReportCalculator {
-        private final List<ITransaction> transactions;
-        private final LocalDate portfolioDate;
+    private AggregatedAnalyzeResult createTotalsTable(List<ITransaction> transactions, ReportParameters reportParameters) {
+        AggregatedAnalyzeResult analyzeResult = new AggregatedAnalyzeResult(transactions);
 
-        private Quotes totalCost = Quotes.ZERO;
-        private Quotes totalIncome = Quotes.ZERO;
-        private BigDecimal totalAmount = BigDecimal.ZERO;
+        // Group by instrument
+        Map<Instrument, List<ITransaction>> groupedTransactions = transactions
+                .stream()
+                .collect(Collectors.groupingBy(ITransaction::getInstrument));
 
-        public ReportCalculator(List<ITransaction> transactions, LocalDate portfolioDate) {
-            this.transactions = transactions;
-            this.portfolioDate = portfolioDate;
-            this.calculate();
-        }
+        for (Instrument instrument: groupedTransactions.keySet()) {
+            Map<Period, List<ITransaction>> dividedTransactions = transactionService.createTransactionSetsByPeriods(
+                    groupedTransactions.get(instrument), reportParameters.getPeriods(), reportParameters.getReportDate());
 
-        public void calculate() {
-            for (ITransaction t: transactions) {
-                if (t.getTransactionType() == TransactionType.BUY) {
-                    totalCost = QuotesUtil.add(
-                            totalCost,
-                            QuotesUtil.multiply(t.getPurchasePrice(), t.getAmount())
-                    );
-                    totalAmount = totalAmount.add(t.getAmount());
-                } else {
-                    totalIncome = QuotesUtil.add(
-                            totalIncome,
-                            QuotesUtil.multiply(t.getPurchasePrice(), t.getAmount())
-                    );
-                    totalAmount = totalAmount.subtract(t.getAmount());
+            for (Period period: reportParameters.getPeriods()) {
+                List<ITransaction> transactionsOfPeriod = dividedTransactions.get(period);
+                if (!transactionsOfPeriod.isEmpty()) {
+                    Analyzer periodAnalyzer = new Analyzer(priceService, transactionsOfPeriod,
+                            reportParameters.getReportDate());
+
+                    Quotes prevPnl = analyzeResult.getPnlCalculation().computeIfAbsent(period, (p) -> Quotes.ZERO);
+                    analyzeResult.getPnlCalculation().put(period, QuotesUtil.add(prevPnl, periodAnalyzer.calculatePNL()));
+
+                    if (period == Period.ALL && !periodAnalyzer.getTotalAmount().equals(BigDecimal.ZERO)) {
+                        // If open position
+                        analyzeResult.setTotalValue(QuotesUtil.add(analyzeResult.getTotalValue(),
+                                periodAnalyzer.calculateTotalValue()));
+                    }
                 }
             }
+
+
         }
 
-        public Quotes calculateTotalValue() {
-            if (totalAmount.equals(BigDecimal.ZERO)) {
-                return Quotes.ZERO;
-            }
-
-            Quotes price = priceService.getPrice(transactions.get(0).getInstrument(), portfolioDate);
-            return QuotesUtil.multiply(price, totalAmount);
-        }
-
-        public Quotes calculatePNL() {
-            return QuotesUtil.subtract(
-                    QuotesUtil.add(totalIncome, calculateTotalValue()),
-                    totalCost
-            );
-        }
-
-        public Quotes calculateROI() {
-            return QuotesUtil.multiply(
-                    QuotesUtil.divide(calculatePNL(), totalCost),
-                    new BigDecimal(100)
-            );
-        }
-
-        public Quotes calculateUnitCost() {
-            return QuotesUtil.divide(
-                    QuotesUtil.subtract(calculateTotalValue(), calculatePNL()),
-                    totalAmount
-            );
-        }
+        return analyzeResult;
     }
-
-
 }

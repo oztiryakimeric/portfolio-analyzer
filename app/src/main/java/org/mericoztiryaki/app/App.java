@@ -14,6 +14,7 @@ import org.mericoztiryaki.domain.service.impl.ReportService;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -36,7 +37,12 @@ public class App {
         System.out.println();
         System.out.println();
 
-        System.out.println(renderReport(report, parameters));
+        System.out.println(renderAggregatedResults(report, parameters));
+
+        System.out.println();
+        System.out.println();
+
+        System.out.println(renderOpenPositions(report, parameters));
 
         System.out.println();
         System.out.println();
@@ -53,7 +59,49 @@ public class App {
                 .collect(Collectors.toList());
     }
 
-    private static String renderReport(Report report, ReportParameters reportParameters) {
+    private static final DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");
+    private static final DecimalFormat rateFormat = new DecimalFormat("#0.00");
+
+    private static String renderAggregatedResults(Report report, ReportParameters reportParameters) {
+        AsciiTable at = new AsciiTable();
+        at.getRenderer().setCWC(new CWC_LongestWordMin(20));
+
+        at.addRule();
+        at.addRow(
+                cellWithCurrency("Total Value", reportParameters.getCurrency()),
+                currencyFormat.format(report.getAggregatedResult().getTotalValue().getValue().get(reportParameters.getCurrency()))
+        );
+
+        at.addRule();
+        at.addRow(
+                cellWithCurrency("PNL All", reportParameters.getCurrency()),
+                currencyFormat.format(report.getAggregatedResult().getPnlCalculation().get(Period.ALL).getValue().get(reportParameters.getCurrency()))
+        );
+
+        at.addRule();
+        at.addRow(
+                cellWithCurrency("PNL 1M", reportParameters.getCurrency()),
+                currencyFormat.format(report.getAggregatedResult().getPnlCalculation().get(Period.M1).getValue().get(reportParameters.getCurrency()))
+        );
+
+        at.addRule();
+        at.addRow(
+                cellWithCurrency("PNL 1W", reportParameters.getCurrency()),
+                currencyFormat.format(report.getAggregatedResult().getPnlCalculation().get(Period.W1).getValue().get(reportParameters.getCurrency()))
+        );
+
+        at.addRule();
+        at.addRow(
+                cellWithCurrency("PNL 1D", reportParameters.getCurrency()),
+                currencyFormat.format(report.getAggregatedResult().getPnlCalculation().get(Period.D1).getValue().get(reportParameters.getCurrency()))
+        );
+
+        at.addRule();
+
+        return at.render();
+    }
+
+    private static String renderOpenPositions(Report report, ReportParameters reportParameters) {
         AsciiTable at = new AsciiTable();
         at.getRenderer().setCWC(new CWC_LongestWordMin(12));
 
@@ -73,9 +121,6 @@ public class App {
                 "ALL", "1M", "1W", "1D"
         );
 
-        DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");
-        DecimalFormat rateFormat = new DecimalFormat("#0.00");
-
         report.getOpenPositions().stream()
                 .filter(w -> !w.getTotalAmount().equals(BigDecimal.ZERO))
                 .sorted(Comparator.comparing(w -> w.getInstrument().getSymbol()))
@@ -87,8 +132,8 @@ public class App {
                             currencyFormat.format(w.getUnitCost().getValue().get(reportParameters.getCurrency())),
                             String.valueOf(w.getTotalAmount()),
                             currencyFormat.format(w.getTotalValue().getValue().get(reportParameters.getCurrency())),
-                            currencyFormat.format(w.getPnlCalculation().get(Period.ALL).getValue().get(reportParameters.getCurrency())),
                             currencyFormat.format(w.getPnlCalculation().get(Period.M1).getValue().get(reportParameters.getCurrency())),
+                            currencyFormat.format(w.getPnlCalculation().get(Period.ALL).getValue().get(reportParameters.getCurrency())),
                             currencyFormat.format(w.getPnlCalculation().get(Period.W1).getValue().get(reportParameters.getCurrency())),
                             currencyFormat.format(w.getPnlCalculation().get(Period.D1).getValue().get(reportParameters.getCurrency())),
                             rateFormat.format(w.getRoiCalculation().get(Period.ALL).getValue().get(reportParameters.getCurrency())),
@@ -100,5 +145,9 @@ public class App {
         at.addRule();
 
         return at.render();
+    }
+
+    private static String cellWithCurrency(String name, Currency currency) {
+        return MessageFormat.format("{0} ({1})", name, String.valueOf(currency));
     }
 }

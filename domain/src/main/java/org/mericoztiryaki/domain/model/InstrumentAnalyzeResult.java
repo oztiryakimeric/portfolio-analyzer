@@ -1,10 +1,8 @@
 package org.mericoztiryaki.domain.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.mericoztiryaki.domain.model.constant.Period;
-import org.mericoztiryaki.domain.model.constant.TransactionType;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
 
 import java.math.BigDecimal;
@@ -14,7 +12,7 @@ import java.util.Map;
 
 @Data
 @RequiredArgsConstructor
-public class Wallet {
+public class InstrumentAnalyzeResult {
 
     private final Instrument instrument;
 

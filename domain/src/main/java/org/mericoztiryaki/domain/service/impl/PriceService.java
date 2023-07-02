@@ -49,9 +49,8 @@ public class PriceService implements IPriceService {
     }
 
     private Map<LocalDate, Quotes> fetchPrices(Instrument instrument, LocalDate date) {
-        LocalDate end = !date.isEqual(LocalDate.now()) ? LocalDate.now().minusDays(1) : date;
         PriceListResponse response = getPriceWindow(instrument.getInstrumentType(), instrument.getSymbol(),
-                date.minusDays(365 * 2), end);
+                date.minusDays(365 * 2), date.plusDays(365 * 2));
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         Map<LocalDate, Quotes> prices = new HashMap<>();
