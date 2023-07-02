@@ -1,9 +1,10 @@
 package org.mericoztiryaki.domain.service.impl;
 
 import org.mericoztiryaki.domain.model.*;
-import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.Period;
-import org.mericoztiryaki.domain.model.constant.TransactionType;
+import org.mericoztiryaki.domain.model.result.AggregatedAnalyzeResult;
+import org.mericoztiryaki.domain.model.result.InstrumentAnalyzeResult;
+import org.mericoztiryaki.domain.model.result.Report;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
 import org.mericoztiryaki.domain.service.*;
 import org.mericoztiryaki.domain.util.QuotesUtil;

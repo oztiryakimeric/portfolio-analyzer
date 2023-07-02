@@ -1,7 +1,9 @@
-package org.mericoztiryaki.domain.model;
+package org.mericoztiryaki.domain.model.result;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.mericoztiryaki.domain.model.result.AggregatedAnalyzeResult;
+import org.mericoztiryaki.domain.model.result.InstrumentAnalyzeResult;
 
 import java.util.List;
 

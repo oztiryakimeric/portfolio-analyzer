@@ -8,6 +8,7 @@ import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.*;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.Period;
+import org.mericoztiryaki.domain.model.result.Report;
 import org.mericoztiryaki.domain.model.transaction.TransactionDefinition;
 import org.mericoztiryaki.domain.service.impl.ReportService;
 

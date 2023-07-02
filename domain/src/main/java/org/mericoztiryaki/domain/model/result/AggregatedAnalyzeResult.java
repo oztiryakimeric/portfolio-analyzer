@@ -1,8 +1,9 @@
-package org.mericoztiryaki.domain.model;
+package org.mericoztiryaki.domain.model.result;
 
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
 
