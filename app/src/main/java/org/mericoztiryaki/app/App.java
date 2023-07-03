@@ -104,15 +104,19 @@ public class App {
 
     private static String renderOpenPositions(Report report, ReportParameters reportParameters) {
         AsciiTable at = new AsciiTable();
-        at.getRenderer().setCWC(new CWC_LongestWordMin(12));
+        at.getRenderer().setCWC(new CWC_LongestWordMin(15));
 
         at.addRule();
-        AT_Row topHeader = at.addRow(null, null, null, null, "", null, null, null, "PNL (" + reportParameters.getCurrency() + ")", null, null, null, "ROI (%)");
-        topHeader.getCells().get(7).getContext().setTextAlignment(TextAlignment.CENTER);
-        topHeader.getCells().get(11).getContext().setTextAlignment(TextAlignment.CENTER);
+        AT_Row topHeader = at.addRow(null, null, null, null, null, null, null, null, null, null, null, null, "Open Positions");
+        topHeader.getCells().get(12).getContext().setTextAlignment(TextAlignment.CENTER);
 
         at.addRule();
-        AT_Row header = at.addRow(
+        AT_Row header = at.addRow(null, null, null, null, "", null, null, null, "PNL (" + reportParameters.getCurrency() + ")", null, null, null, "ROI (%)");
+        header.getCells().get(8).getContext().setTextAlignment(TextAlignment.CENTER);
+        header.getCells().get(12).getContext().setTextAlignment(TextAlignment.CENTER);
+
+        at.addRule();
+        at.addRow(
                 "Instrument",
                 "Price(" + reportParameters.getCurrency() + ")",
                 "Cost",
