@@ -29,6 +29,8 @@ public class ReportService implements IReportService {
     public Report generateReport(ReportParameters reportParameters) {
         List<ITransaction> transactions = reportParameters.getTransactions()
                 .stream().map(def -> transactionService.buildTransactionObject(def))
+                .filter(t -> reportParameters.getFilteredInstrumentTypes() == null
+                        || reportParameters.getFilteredInstrumentTypes().contains(t.getInstrument().getInstrumentType()) )
                 .sorted(Comparator.comparing(ITransaction::getDate))
                 .collect(Collectors.toList());
 
@@ -99,7 +101,6 @@ public class ReportService implements IReportService {
                     }
                 }
             }
-
 
         }
 

@@ -28,25 +28,31 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public ITransaction buildTransactionObject(TransactionDefinition definition) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
-        LocalDateTime transactionTime = LocalDateTime.parse(definition.getDate(), formatter);
-        Currency transactionCurrency = Currency.valueOf(definition.getCurrency());
+            LocalDateTime transactionTime = LocalDateTime.parse(definition.getDate(), formatter);
+            Currency transactionCurrency = Currency.valueOf(definition.getCurrency());
 
-        return new Transaction(
-                transactionTime,
-                new Instrument(InstrumentType.valueOf(definition.getInstrumentType()), definition.getSymbol()),
-                TransactionType.valueOf(definition.getTransactionType()),
-                new BigDecimal(definition.getAmount().replace(",", "")),
-                priceService.calculateExchangeRates(transactionTime.toLocalDate(),
-                        new BigDecimal(definition.getPurchasePrice().replace(",", "")),
-                        transactionCurrency
-                ),
-                priceService.calculateExchangeRates(transactionTime.toLocalDate(),
-                        new BigDecimal(definition.getCommissionPrice().replace(",", "")),
-                        transactionCurrency
-                ),
-                transactionCurrency);
+            return new Transaction(
+                    transactionTime,
+                    new Instrument(InstrumentType.valueOf(definition.getInstrumentType()), definition.getSymbol()),
+                    TransactionType.valueOf(definition.getTransactionType()),
+                    new BigDecimal(definition.getAmount().replace(",", "")),
+                    priceService.calculateExchangeRates(transactionTime.toLocalDate(),
+                            new BigDecimal(definition.getPurchasePrice().replace(",", "")),
+                            transactionCurrency
+                    ),
+                    priceService.calculateExchangeRates(transactionTime.toLocalDate(),
+                            new BigDecimal(definition.getCommissionPrice().replace(",", "")),
+                            transactionCurrency
+                    ),
+                    transactionCurrency);
+        } catch (Exception e) {
+            System.out.println("Row " + definition.getIndex() + " is invalid...");
+            System.out.println(e.getLocalizedMessage());
+            throw e;
+        }
     }
 
     @Override

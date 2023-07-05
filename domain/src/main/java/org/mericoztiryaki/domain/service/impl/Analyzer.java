@@ -50,7 +50,6 @@ public class Analyzer implements IAnalyzer {
 
     @Override
     public Quotes calculateTotalValue() {
-        // TODO BURASI
         if (totalAmount.equals(BigDecimal.ZERO)) {
             return Quotes.ZERO;
         }

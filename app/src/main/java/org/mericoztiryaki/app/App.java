@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -51,13 +52,15 @@ public class App {
     }
 
     private static List<TransactionDefinition> readTransactions() throws IOException {
-        List<List<String>> rawCsvFile = Util.readTsvFile(".dev-space/dev-portfolio-1.csv");
+        List<List<String>> rawCsvFile = Util.readCsvFile(".dev-space/dev-portfolio-3.csv");
 
-        return rawCsvFile.stream()
-                .map(row -> new TransactionDefinition(row.get(0), row.get(1), row.get(2), row.get(3), row.get(4),
-                        row.get(5), row.get(6), row.get(7)))
-                .filter(row -> !row.getInstrumentType().equals("FUND"))
-                .collect(Collectors.toList());
+        List<TransactionDefinition> defs = new ArrayList<>();
+        for(int i=0; i<rawCsvFile.size(); i++) {
+            List<String> row = rawCsvFile.get(i);
+            defs.add(new TransactionDefinition(i, row.get(0), row.get(1), row.get(2), row.get(3), row.get(4),
+                    row.get(5), row.get(6), row.get(7)));
+        }
+        return defs;
     }
 
     private static final DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");

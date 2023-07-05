@@ -8,6 +8,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public class TransactionDefinition {
 
+    private int index;
+
     private String date;
 
     private String instrumentType;

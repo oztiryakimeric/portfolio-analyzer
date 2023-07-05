@@ -8,13 +8,13 @@ import java.util.List;
 
 public class Util {
 
-    public static List<List<String>> readTsvFile(String filePath) throws IOException {
+    public static List<List<String>> readCsvFile(String filePath) throws IOException {
         List<List<String>> data = new ArrayList<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = br.readLine()) != null) {
-                String[] values = line.split("\t");
+                String[] values = line.split(",");
                 List<String> row = new ArrayList<>();
                 for (String value : values) {
                     row.add(value.trim());
