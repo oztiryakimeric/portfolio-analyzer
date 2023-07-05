@@ -39,7 +39,7 @@ public class App {
         System.out.println();
         System.out.println();
 
-        System.out.println(renderAggregatedResults(report, parameters, AggregatedTableLevel.INSTRUMENT_TYPE));
+        System.out.println(renderAggregatedResults(report, parameters));
 
         System.out.println();
         System.out.println();
@@ -66,11 +66,7 @@ public class App {
     private static final DecimalFormat currencyFormat = new DecimalFormat("#,##0.00");
     private static final DecimalFormat rateFormat = new DecimalFormat("#0.00");
 
-    private enum AggregatedTableLevel {
-        INSTRUMENT_TYPE,SYMBOL;
-    }
-
-    private static String renderAggregatedResults(Report report, ReportParameters reportParameters, AggregatedTableLevel aggregatedTableLevel) {
+    private static String renderAggregatedResults(Report report, ReportParameters reportParameters) {
         AsciiTable at = new AsciiTable();
         at.getRenderer().setCWC(new CWC_LongestWordMin(20));
 
@@ -78,49 +74,45 @@ public class App {
         AT_Row tableHeader = at.addRow(null, null, null, null, "Aggregated Results");
         tableHeader.getCells().get(4).getContext().setTextAlignment(TextAlignment.CENTER);
 
-        if (aggregatedTableLevel == AggregatedTableLevel.INSTRUMENT_TYPE) {
-            at.addRule();
-            at.addRow("", "ALL", String.valueOf(InstrumentType.BIST), String.valueOf(InstrumentType.CURRENCY), String.valueOf(InstrumentType.FUND));
+        at.addRule();
+        at.addRow("", "ALL", String.valueOf(InstrumentType.BIST), String.valueOf(InstrumentType.CURRENCY), String.valueOf(InstrumentType.FUND));
 
+        at.addRule();
+        at.addRow(
+                cellWithCurrency("Value", reportParameters.getCurrency()),
+                currencyFormat.format(report.getAggregatedResult().getTotalValue().getValue().get(reportParameters.getCurrency())),
+                currencyFormat.format(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.BIST)).getTotalValue().getValue().get(reportParameters.getCurrency())),
+                currencyFormat.format(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.CURRENCY)).getTotalValue().getValue().get(reportParameters.getCurrency())),
+                currencyFormat.format(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.FUND)).getTotalValue().getValue().get(reportParameters.getCurrency()))
+        );
+
+        List<Period> sortedPeriods = reportParameters.getPeriods().stream()
+                .sorted(Comparator.comparing(Period::getDayCount).reversed())
+                .collect(Collectors.toList());
+
+        for (Period period: sortedPeriods) {
             at.addRule();
             at.addRow(
-                    cellWithCurrency("Value", reportParameters.getCurrency()),
-                    currencyFormat.format(report.getAggregatedResult().getTotalValue().getValue().get(reportParameters.getCurrency())),
-                    currencyFormat.format(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.BIST)).getTotalValue().getValue().get(reportParameters.getCurrency())),
-                    currencyFormat.format(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.CURRENCY)).getTotalValue().getValue().get(reportParameters.getCurrency())),
-                    currencyFormat.format(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.FUND)).getTotalValue().getValue().get(reportParameters.getCurrency()))
+                    cellWithCurrency("Pnl " + period, reportParameters.getCurrency()),
+                    currencyFormat.format(report.getAggregatedResult().getPnlCalculation().get(period).getValue().get(reportParameters.getCurrency())),
+                    getSafePnl(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.BIST)).getPnlCalculation(), period)
+                            .map(pnl -> pnl.getValue().get(reportParameters.getCurrency()))
+                            .map(currency -> currencyFormat.format(currency))
+                            .orElse("-"),
+                    getSafePnl(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.CURRENCY)).getPnlCalculation(), period)
+                            .map(pnl -> pnl.getValue().get(reportParameters.getCurrency()))
+                            .map(currency -> currencyFormat.format(currency))
+                            .orElse("-"),
+                    getSafePnl(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.FUND)).getPnlCalculation(), period)
+                            .map(pnl -> pnl.getValue().get(reportParameters.getCurrency()))
+                            .map(currency -> currencyFormat.format(currency))
+                            .orElse("-")
             );
-
-            List<Period> sortedPeriods = reportParameters.getPeriods().stream()
-                    .sorted(Comparator.comparing(Period::getDayCount).reversed())
-                    .collect(Collectors.toList());
-
-            for (Period period: sortedPeriods) {
-                at.addRule();
-                at.addRow(
-                        cellWithCurrency("Pnl " + period, reportParameters.getCurrency()),
-                        currencyFormat.format(report.getAggregatedResult().getPnlCalculation().get(period).getValue().get(reportParameters.getCurrency())),
-                        getSafePnl(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.BIST)).getPnlCalculation(), period)
-                                .map(pnl -> pnl.getValue().get(reportParameters.getCurrency()))
-                                .map(currency -> currencyFormat.format(currency))
-                                .orElse("-"),
-                        getSafePnl(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.CURRENCY)).getPnlCalculation(), period)
-                                .map(pnl -> pnl.getValue().get(reportParameters.getCurrency()))
-                                .map(currency -> currencyFormat.format(currency))
-                                .orElse("-"),
-                        getSafePnl(report.getAggregatedResult().getChildren().get(String.valueOf(InstrumentType.FUND)).getPnlCalculation(), period)
-                                .map(pnl -> pnl.getValue().get(reportParameters.getCurrency()))
-                                .map(currency -> currencyFormat.format(currency))
-                                .orElse("-")
-                );
-            }
-
-            at.addRule();
-
-            return at.render();
         }
 
-        throw new NotImplementedException(aggregatedTableLevel + " : Not implemented");
+        at.addRule();
+
+        return at.render();
     }
 
     private static Optional<Quotes> getSafePnl(Map<Period, Quotes> pnlCalculation, Period p) {
