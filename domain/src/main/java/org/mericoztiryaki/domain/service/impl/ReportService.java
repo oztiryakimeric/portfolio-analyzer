@@ -1,6 +1,8 @@
 package org.mericoztiryaki.domain.service.impl;
 
 import org.mericoztiryaki.domain.model.*;
+import org.mericoztiryaki.domain.model.constant.Currency;
+import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.result.AggregatedAnalyzeResult;
 import org.mericoztiryaki.domain.model.result.InstrumentAnalyzeResult;
@@ -10,9 +12,7 @@ import org.mericoztiryaki.domain.service.*;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ReportService implements IReportService {
@@ -74,7 +74,7 @@ public class ReportService implements IReportService {
     }
 
     private AggregatedAnalyzeResult createTotalsTable(List<ITransaction> transactions, ReportParameters reportParameters) {
-        AggregatedAnalyzeResult analyzeResult = new AggregatedAnalyzeResult(transactions);
+        AggregatedAnalyzeResult rootResult = new AggregatedAnalyzeResult("Total");
 
         // Group by instrument
         Map<Instrument, List<ITransaction>> groupedTransactions = transactions
@@ -82,6 +82,16 @@ public class ReportService implements IReportService {
                 .collect(Collectors.groupingBy(ITransaction::getInstrument));
 
         for (Instrument instrument: groupedTransactions.keySet()) {
+            AggregatedAnalyzeResult instrumentTypeResult = rootResult.getChildren().computeIfAbsent(
+                    String.valueOf(instrument.getInstrumentType()),
+                    (t) -> new AggregatedAnalyzeResult(String.valueOf(t))
+            );
+
+            AggregatedAnalyzeResult symbolResult = instrumentTypeResult.getChildren().computeIfAbsent(
+                    instrument.getSymbol(),
+                    (s) -> new AggregatedAnalyzeResult(s)
+            );
+
             Map<Period, List<ITransaction>> dividedTransactions = transactionService.createTransactionSetsByPeriods(
                     groupedTransactions.get(instrument), reportParameters.getPeriods(), reportParameters.getReportDate());
 
@@ -91,19 +101,24 @@ public class ReportService implements IReportService {
                     Analyzer periodAnalyzer = new Analyzer(priceService, transactionsOfPeriod,
                             reportParameters.getReportDate());
 
-                    Quotes prevPnl = analyzeResult.getPnlCalculation().computeIfAbsent(period, (p) -> Quotes.ZERO);
-                    analyzeResult.getPnlCalculation().put(period, QuotesUtil.add(prevPnl, periodAnalyzer.calculatePNL()));
-
-                    if (period == Period.ALL && !periodAnalyzer.getTotalAmount().equals(BigDecimal.ZERO)) {
-                        // If open position
-                        analyzeResult.setTotalValue(QuotesUtil.add(analyzeResult.getTotalValue(),
-                                periodAnalyzer.calculateTotalValue()));
-                    }
+                    appendAnalyzeResult(rootResult, periodAnalyzer, period);
+                    appendAnalyzeResult(instrumentTypeResult, periodAnalyzer, period);
+                    appendAnalyzeResult(symbolResult, periodAnalyzer, period);
                 }
             }
 
         }
 
-        return analyzeResult;
+        return rootResult;
+    }
+
+    private void appendAnalyzeResult(AggregatedAnalyzeResult targetResult, Analyzer analyzer, Period period) {
+        Quotes prevPnl = targetResult.getPnlCalculation().computeIfAbsent(period, (p) -> Quotes.ZERO);
+        targetResult.getPnlCalculation().put(period, QuotesUtil.add(prevPnl, analyzer.calculatePNL()));
+
+        if (period == Period.ALL && !analyzer.getTotalAmount().equals(BigDecimal.ZERO)) {
+            // If open position
+            targetResult.setTotalValue(QuotesUtil.add(targetResult.getTotalValue(), analyzer.calculateTotalValue()));
+        }
     }
 }

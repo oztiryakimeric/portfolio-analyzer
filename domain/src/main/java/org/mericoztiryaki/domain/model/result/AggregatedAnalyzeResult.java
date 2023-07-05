@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
+import org.mericoztiryaki.domain.service.impl.Analyzer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +17,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AggregatedAnalyzeResult {
 
-    private final List<ITransaction> transactions;
+    private final String id;
+
+    private final Map<String, AggregatedAnalyzeResult> children = new HashMap<>();
 
     private final Map<Period, Quotes> pnlCalculation = new HashMap<>();
 
