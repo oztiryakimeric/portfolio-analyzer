@@ -6,7 +6,6 @@ import lombok.Setter;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.constant.TransactionType;
-import org.mericoztiryaki.domain.model.transaction.ITransaction;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
 import java.math.BigDecimal;

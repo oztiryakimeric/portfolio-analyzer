@@ -1,7 +1,7 @@
 package org.mericoztiryaki.domain.service;
 
-import org.mericoztiryaki.domain.model.result.Report;
 import org.mericoztiryaki.domain.model.ReportParameters;
+import org.mericoztiryaki.domain.model.result.Report;
 
 public interface IReportService {
 

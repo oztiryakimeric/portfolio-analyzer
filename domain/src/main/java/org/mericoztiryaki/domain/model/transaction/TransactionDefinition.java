@@ -2,7 +2,6 @@ package org.mericoztiryaki.domain.model.transaction;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 
 @Data
 @AllArgsConstructor

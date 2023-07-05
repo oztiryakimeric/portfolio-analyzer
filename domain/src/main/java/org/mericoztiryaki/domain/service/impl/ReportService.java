@@ -1,18 +1,22 @@
 package org.mericoztiryaki.domain.service.impl;
 
-import org.mericoztiryaki.domain.model.*;
-import org.mericoztiryaki.domain.model.constant.Currency;
-import org.mericoztiryaki.domain.model.constant.InstrumentType;
+import org.mericoztiryaki.domain.model.Instrument;
+import org.mericoztiryaki.domain.model.Quotes;
+import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.result.AggregatedAnalyzeResult;
 import org.mericoztiryaki.domain.model.result.InstrumentAnalyzeResult;
 import org.mericoztiryaki.domain.model.result.Report;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
-import org.mericoztiryaki.domain.service.*;
+import org.mericoztiryaki.domain.service.IPriceService;
+import org.mericoztiryaki.domain.service.IReportService;
+import org.mericoztiryaki.domain.service.ITransactionService;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ReportService implements IReportService {

@@ -7,7 +7,6 @@ import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.TransactionType;
-import org.mericoztiryaki.domain.model.transaction.ITransaction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

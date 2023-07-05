@@ -4,8 +4,8 @@ import lombok.Getter;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.constant.TransactionType;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
-import org.mericoztiryaki.domain.service.IPriceService;
 import org.mericoztiryaki.domain.service.IAnalyzer;
+import org.mericoztiryaki.domain.service.IPriceService;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
 import java.math.BigDecimal;

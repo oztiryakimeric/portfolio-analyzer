@@ -12,9 +12,6 @@ import org.mericoztiryaki.domain.service.IPriceService;
 import org.mericoztiryaki.domain.util.Environment;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.time.LocalDate;
@@ -22,7 +19,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PriceService implements IPriceService {

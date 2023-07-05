@@ -2,7 +2,7 @@ package org.mericoztiryaki.domain.service.impl;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.mericoztiryaki.domain.model.*;
+import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.model.constant.Period;
