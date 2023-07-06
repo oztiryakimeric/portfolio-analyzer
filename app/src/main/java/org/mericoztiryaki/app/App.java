@@ -4,7 +4,6 @@ import de.vandermeer.asciitable.AT_Row;
 import de.vandermeer.asciitable.AsciiTable;
 import de.vandermeer.asciitable.CWC_LongestWordMin;
 import de.vandermeer.skb.interfaces.transformers.textformat.TextAlignment;
-import org.apache.commons.lang3.NotImplementedException;
 import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.ReportParameters;
@@ -45,6 +44,14 @@ public class App {
         System.out.println();
 
         System.out.println(renderOpenPositions(report, parameters));
+
+        System.out.println();
+        System.out.println();
+
+        System.out.println(renderPnlHistory(report.getDailyPnlHistory(), parameters, "Daily Pnl History"));
+
+        System.out.println();
+        System.out.println();
 
         System.out.println();
         System.out.println();
@@ -169,7 +176,63 @@ public class App {
         return at.render();
     }
 
+    private static String renderPnlHistory(Map<String, Quotes> pnlHistory, ReportParameters reportParameters, String tableName) {
+        AsciiTable at = new AsciiTable();
+        at.getRenderer().setCWC(new CWC_LongestWordMin(20));
+
+        at.addRule();
+        AT_Row tableHeader= at.addRow(
+                null,
+                tableName
+        );
+        tableHeader.getCells().get(1).getContext().setTextAlignment(TextAlignment.CENTER);
+
+        at.addRule();
+        at.addRow(
+                "Date",
+                "PNL (" + reportParameters.getCurrency() + ")"
+        );
+
+        pnlHistory.keySet()
+                .stream()
+                .sorted()
+                .forEach(day -> {
+                    at.addRule();
+                    at.addRow(day, pnlHistory.get(day).getValue().get(reportParameters.getCurrency()));
+                });
+
+        at.addRule();
+        return at.render();
+    }
+
     private static String cellWithCurrency(String name, Currency currency) {
         return MessageFormat.format("{0} ({1})", name, String.valueOf(currency));
+    }
+
+    private static  String flex(String s1, String s2) {
+        String[] l1 = s1.split("/n");
+        String[] l2 = s2.split("/n");
+
+        List<String> lines = new ArrayList<>();
+
+        int leftTableSize = l1[0].length();
+
+        for (int rowIndex=0; rowIndex<l1.length; rowIndex++) {
+            if (rowIndex < l2.length) {
+                lines.add(l1[rowIndex] + " x " + l2[rowIndex]);
+            } else {
+                lines.add(chTimes('c', leftTableSize) + " x " + l2[rowIndex]);
+            }
+        }
+
+        return String.join("\n", lines);
+    }
+
+    private static String chTimes(char ch, int count) {
+        String s = "";
+        for(int i=0; i<count; i++) {
+            s += ch;
+        }
+        return s;
     }
 }

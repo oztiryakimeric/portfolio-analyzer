@@ -20,4 +20,5 @@ public interface ITransactionService {
                                                                    Set<Period> periods,
                                                                    LocalDate portfolioDate);
 
+    List<ITransaction> createTransactionSetByWindow(List<ITransaction> transactions, LocalDate start, LocalDate end);
 }

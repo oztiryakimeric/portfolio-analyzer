@@ -70,8 +70,8 @@ public class TransactionService implements ITransactionService {
         return transactionSets;
     }
 
-    private List<ITransaction> createTransactionSetByWindow(List<ITransaction> transactions, LocalDate start,
-                                                            LocalDate end) {
+    @Override
+    public List<ITransaction> createTransactionSetByWindow(List<ITransaction> transactions, LocalDate start, LocalDate end) {
         Map<Instrument, TransactionSet> transactionSets = new HashMap<>();
 
         for (ITransaction t: transactions) {

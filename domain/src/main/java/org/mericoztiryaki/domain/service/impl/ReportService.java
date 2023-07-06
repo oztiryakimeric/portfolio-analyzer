@@ -14,10 +14,10 @@ import org.mericoztiryaki.domain.service.ITransactionService;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ReportService implements IReportService {
 
@@ -41,7 +41,10 @@ public class ReportService implements IReportService {
         AggregatedAnalyzeResult aggregatedResult = createTotalsTable(transactions, reportParameters);
         List<InstrumentAnalyzeResult> openPositions = createOpenPositionsTable(transactions, reportParameters);
 
-        return new Report(aggregatedResult, openPositions);
+        Map<String, Quotes> dailyPnlHistory = createPnlHistory(transactions, reportParameters, 1, 7);
+        Map<String, Quotes> weeklyPnlHistory = createPnlHistory(transactions, reportParameters, 7, 4);
+
+        return new Report(aggregatedResult, openPositions, weeklyPnlHistory, dailyPnlHistory);
     }
 
     private List<InstrumentAnalyzeResult> createOpenPositionsTable(List<ITransaction> transactions, ReportParameters reportParameters) {
@@ -124,5 +127,33 @@ public class ReportService implements IReportService {
             // If open position
             targetResult.setTotalValue(QuotesUtil.add(targetResult.getTotalValue(), analyzer.calculateTotalValue()));
         }
+    }
+
+    private Map<String, Quotes> createPnlHistory(List<ITransaction> transactions, ReportParameters reportParameters, int size, int count) {
+        // Group by instrument
+        Map<Instrument, List<ITransaction>> groupedTransactions = transactions
+                .stream()
+                .collect(Collectors.groupingBy(ITransaction::getInstrument));
+
+
+        Map<LocalDate, Quotes> pnlSums = new HashMap<>();
+
+        for (Instrument instrument: groupedTransactions.keySet()) {
+            for (int i=0; i<count; i++) {
+                LocalDate windowStart = LocalDate.now().minusDays((i + 1)* size);
+                LocalDate windowEnd = LocalDate.now().minusDays(i * size);
+
+                List<ITransaction> transactionWindow = transactionService.createTransactionSetByWindow(
+                        groupedTransactions.get(instrument), windowStart, windowEnd);
+
+                Analyzer periodAnalyzer = new Analyzer(priceService, transactionWindow, windowEnd);
+                Quotes prevSum = pnlSums.computeIfAbsent(windowEnd, (p) -> Quotes.ZERO);
+
+                pnlSums.put(windowEnd, QuotesUtil.add(prevSum, periodAnalyzer.calculatePNL()));
+            }
+
+        }
+
+        return pnlSums.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue()));
     }
 }
