@@ -14,11 +14,9 @@ import org.mericoztiryaki.domain.service.ITransactionService;
 import org.mericoztiryaki.domain.util.BigDecimalUtil;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class ReportService implements IReportService {
 
@@ -121,8 +119,8 @@ public class ReportService implements IReportService {
     }
 
     private void appendAnalyzeResult(AggregatedAnalyzeResult targetResult, Analyzer analyzer, Period period) {
-        Quotes prevPnl = targetResult.getPnlCalculation().computeIfAbsent(period, (p) -> Quotes.ZERO);
-        targetResult.getPnlCalculation().put(period, QuotesUtil.add(prevPnl, analyzer.calculatePNL()));
+        Optional<Quotes> prevPnl = targetResult.getPnlCalculation().computeIfAbsent(period, (p) -> Optional.of(Quotes.ZERO));
+        targetResult.getPnlCalculation().put(period, Optional.of(QuotesUtil.add(prevPnl.get(), analyzer.calculatePNL())));
 
         if (period == Period.ALL && !BigDecimalUtil.isZero(analyzer.getTotalAmount())) {
             // If open position

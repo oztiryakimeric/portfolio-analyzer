@@ -7,6 +7,7 @@ import org.mericoztiryaki.domain.model.constant.Period;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Data
 @RequiredArgsConstructor
@@ -16,7 +17,7 @@ public class AggregatedAnalyzeResult {
 
     private final Map<String, AggregatedAnalyzeResult> children = new HashMap<>();
 
-    private final Map<Period, Quotes> pnlCalculation = new HashMap<>();
+    private final Map<Period, Optional<Quotes>> pnlCalculation = new HashMap<>();
 
     private Quotes totalValue = Quotes.ZERO;
 
