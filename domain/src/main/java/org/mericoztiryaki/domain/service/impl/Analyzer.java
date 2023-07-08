@@ -6,6 +6,7 @@ import org.mericoztiryaki.domain.model.constant.TransactionType;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
 import org.mericoztiryaki.domain.service.IAnalyzer;
 import org.mericoztiryaki.domain.service.IPriceService;
+import org.mericoztiryaki.domain.util.BigDecimalUtil;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
 import java.math.BigDecimal;
@@ -50,7 +51,7 @@ public class Analyzer implements IAnalyzer {
 
     @Override
     public Quotes calculateTotalValue() {
-        if (totalAmount.equals(BigDecimal.ZERO)) {
+        if (BigDecimalUtil.isZero(totalAmount)) {
             return Quotes.ZERO;
         }
 

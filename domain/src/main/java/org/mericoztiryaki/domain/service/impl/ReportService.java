@@ -11,6 +11,7 @@ import org.mericoztiryaki.domain.model.transaction.ITransaction;
 import org.mericoztiryaki.domain.service.IPriceService;
 import org.mericoztiryaki.domain.service.IReportService;
 import org.mericoztiryaki.domain.service.ITransactionService;
+import org.mericoztiryaki.domain.util.BigDecimalUtil;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
 import java.math.BigDecimal;
@@ -59,7 +60,7 @@ public class ReportService implements IReportService {
                     instrumentAnalyzeResult.setTotalValue(walletAnalyzer.calculateTotalValue());
                     instrumentAnalyzeResult.setUnitCost(walletAnalyzer.calculateUnitCost());
 
-                    if (!instrumentAnalyzeResult.getTotalAmount().equals(BigDecimal.ZERO)) {
+                    if (!BigDecimalUtil.isZero(instrumentAnalyzeResult.getTotalAmount())) {
                         instrumentAnalyzeResult.setPrice(priceService.getPrice(instrumentAnalyzeResult.getInstrument(), reportParameters.getReportDate()));
                     }
 
@@ -123,7 +124,7 @@ public class ReportService implements IReportService {
         Quotes prevPnl = targetResult.getPnlCalculation().computeIfAbsent(period, (p) -> Quotes.ZERO);
         targetResult.getPnlCalculation().put(period, QuotesUtil.add(prevPnl, analyzer.calculatePNL()));
 
-        if (period == Period.ALL && !analyzer.getTotalAmount().equals(BigDecimal.ZERO)) {
+        if (period == Period.ALL && !BigDecimalUtil.isZero(analyzer.getTotalAmount())) {
             // If open position
             targetResult.setTotalValue(QuotesUtil.add(targetResult.getTotalValue(), analyzer.calculateTotalValue()));
         }

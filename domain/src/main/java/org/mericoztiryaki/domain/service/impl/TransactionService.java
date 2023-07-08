@@ -13,6 +13,7 @@ import org.mericoztiryaki.domain.model.transaction.TransactionDefinition;
 import org.mericoztiryaki.domain.model.transaction.UnifiedTransaction;
 import org.mericoztiryaki.domain.service.IPriceService;
 import org.mericoztiryaki.domain.service.ITransactionService;
+import org.mericoztiryaki.domain.util.BigDecimalUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -91,11 +92,11 @@ public class TransactionService implements ITransactionService {
                 .stream()
                 // Filter unnecessary sets
                 .filter(e ->
-                        !(e.getValue().getUnifiedTransaction().getAmount().equals(BigDecimal.ZERO) &&
+                        !(BigDecimalUtil.isZero(e.getValue().getUnifiedTransaction().getAmount()) &&
                         e.getValue().getTransactionHappenedInPeriod().size() == 0)
                 )
                 .map(e -> {
-                    if (e.getValue().getUnifiedTransaction().getAmount() != BigDecimal.ZERO) {
+                    if (!BigDecimalUtil.isZero(e.getValue().getUnifiedTransaction().getAmount())) {
                         e.getValue().getUnifiedTransaction().setPurchasePrice(
                                 priceService.getPrice(e.getValue().getUnifiedTransaction().getInstrument(), start));
                     }
@@ -118,7 +119,7 @@ public class TransactionService implements ITransactionService {
 
         public List<ITransaction> getTransactions() {
             List<ITransaction> result = new ArrayList<>();
-            if (!this.unifiedTransaction.getAmount().equals(BigDecimal.ZERO)) {
+            if (!BigDecimalUtil.isZero(this.unifiedTransaction.getAmount())) {
                 result.add(this.unifiedTransaction);
             }
             result.addAll(this.transactionHappenedInPeriod);
@@ -136,14 +137,14 @@ public class TransactionService implements ITransactionService {
 
             bucket.addTransaction(transaction);
 
-            if (bucket.getCumulativeAmount() == BigDecimal.ZERO) {
+            if (BigDecimalUtil.isZero(bucket.getCumulativeAmount())) {
                 buckets.put(transaction.getInstrument(), new InstrumentBucket());
             }
         }
 
         return buckets.entrySet()
                 .stream()
-                .filter(e -> e.getValue().getCumulativeAmount() != BigDecimal.ZERO)
+                .filter(e -> !BigDecimalUtil.isZero(e.getValue().getCumulativeAmount()))
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getTransactions()));
     }
 

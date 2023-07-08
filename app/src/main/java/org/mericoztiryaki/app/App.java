@@ -13,6 +13,7 @@ import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.result.Report;
 import org.mericoztiryaki.domain.model.transaction.TransactionDefinition;
 import org.mericoztiryaki.domain.service.impl.ReportService;
+import org.mericoztiryaki.domain.util.BigDecimalUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -151,7 +152,7 @@ public class App {
         );
 
         report.getOpenPositions().stream()
-                .filter(w -> !w.getTotalAmount().equals(BigDecimal.ZERO))
+                .filter(w -> !BigDecimalUtil.isZero(w.getTotalAmount()))
                 .sorted(Comparator.comparing(w -> w.getInstrument().getSymbol()))
                 .forEach(w -> {
                     at.addRule();
