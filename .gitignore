@@ -39,3 +39,5 @@ build/
 .DS_Store
 
 .dev-space
+
+.xlsx

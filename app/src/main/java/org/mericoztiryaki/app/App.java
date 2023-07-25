@@ -1,7 +1,7 @@
 package org.mericoztiryaki.app;
 
+import org.mericoztiryaki.app.writer.excel.ExcelReportWriter;
 import org.mericoztiryaki.app.writer.ReportWriter;
-import org.mericoztiryaki.app.writer.TextReportWriter;
 import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
@@ -29,7 +29,7 @@ public class App {
                 .build();
 
         Report report = new ReportService().generateReport(parameters);
-        ReportWriter writer = new TextReportWriter();
+        ReportWriter writer = new ExcelReportWriter();
 
         System.out.println(writer.build(report, parameters));
 
