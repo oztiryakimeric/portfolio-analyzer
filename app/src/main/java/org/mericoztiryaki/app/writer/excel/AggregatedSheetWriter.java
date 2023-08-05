@@ -81,7 +81,6 @@ public class AggregatedSheetWriter {
         }
 
         public int renderTableHeader() {
-            // Table header
             Row tableHeader = sheet.createRow(tableStartIndex);
 
             Font font = workbook.createFont();

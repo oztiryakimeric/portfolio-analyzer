@@ -1,5 +1,6 @@
 package org.mericoztiryaki.app;
 
+import org.mericoztiryaki.app.writer.TextReportWriter;
 import org.mericoztiryaki.app.writer.excel.ExcelReportWriter;
 import org.mericoztiryaki.app.writer.ReportWriter;
 import org.mericoztiryaki.domain.exception.PriceApiException;

@@ -26,6 +26,9 @@ public class ExcelReportWriter implements ReportWriter {
         DetailedAggregatedSheetWriter detailedAggregatedSheetWriter = new DetailedAggregatedSheetWriter(report, reportParameters, workbook);
         detailedAggregatedSheetWriter.build();
 
+        OpenPositionsSheetWriter openPositionsSheetWriter = new OpenPositionsSheetWriter(report, reportParameters, workbook);
+        openPositionsSheetWriter.build();
+
         File currDir = new File(".");
         String path = currDir.getAbsolutePath();
         String fileLocation = path.substring(0, path.length() - 1) + "temp.xlsx";
