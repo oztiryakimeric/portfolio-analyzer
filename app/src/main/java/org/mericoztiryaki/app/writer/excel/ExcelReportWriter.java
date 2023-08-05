@@ -1,5 +1,6 @@
 package org.mericoztiryaki.app.writer.excel;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.mericoztiryaki.app.writer.ReportWriter;

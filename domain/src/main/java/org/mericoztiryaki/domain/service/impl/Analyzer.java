@@ -69,10 +69,7 @@ public class Analyzer implements IAnalyzer {
 
     @Override
     public Quotes calculateROI() {
-        return QuotesUtil.multiply(
-                QuotesUtil.divide(calculatePNL(), totalCost),
-                new BigDecimal(100)
-        );
+        return QuotesUtil.divide(calculatePNL(), totalCost);
     }
 
     @Override

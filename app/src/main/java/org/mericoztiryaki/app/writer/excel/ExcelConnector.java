@@ -1,7 +1,9 @@
 package org.mericoztiryaki.app.writer.excel;
 
 import lombok.Getter;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.mericoztiryaki.domain.model.constant.Currency;
 
 import java.math.BigDecimal;
@@ -101,6 +103,8 @@ public class ExcelConnector {
 
         private HorizontalAlignment alignment;
 
+        private boolean percentage;
+
         public CellBuilder index(Integer index) {
             this.index = index;
             return this;
@@ -123,6 +127,11 @@ public class ExcelConnector {
 
         public CellBuilder currency(Currency currency) {
             this.currency = currency;
+            return this;
+        }
+
+        public CellBuilder percentage(boolean percentage) {
+            this.percentage = percentage;
             return this;
         }
 
@@ -153,6 +162,10 @@ public class ExcelConnector {
             if (currency != null) {
                 DataFormat df = workbook.createDataFormat();
                 cs.setDataFormat(df.getFormat(currency.getPrefix() + "#,##0.0"));
+                setGreenBlueBackground(cs);
+            } else if (percentage) {
+                cs.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
+                setGreenBlueBackground(cs);
             }
 
             if (alignment != null) {
@@ -160,6 +173,11 @@ public class ExcelConnector {
             }
 
             return cell;
+        }
+
+        private void setGreenBlueBackground(CellStyle cellStyle) {
+            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            cellStyle.setFillForegroundColor(this.valueBigDecimal.doubleValue() < 0 ? IndexedColors.ORANGE.index : IndexedColors.LIME.index);
         }
     }
 }

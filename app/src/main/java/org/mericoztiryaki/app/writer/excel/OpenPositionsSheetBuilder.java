@@ -155,7 +155,7 @@ public class OpenPositionsSheetBuilder extends AbstractSheetBuilder {
             for (Period period: getSortedPeriods()) {
                 getExcelConnector().cellBuilder()
                         .value(position.getRoiCalculation().get(period).getValue().get(currency))
-                        .currency(currency)
+                        .percentage(true)
                         .alignment(HorizontalAlignment.RIGHT)
                         .build();
             }
