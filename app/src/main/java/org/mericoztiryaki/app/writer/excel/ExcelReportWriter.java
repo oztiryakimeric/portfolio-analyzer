@@ -29,6 +29,9 @@ public class ExcelReportWriter implements ReportWriter {
         OpenPositionsSheetWriter openPositionsSheetWriter = new OpenPositionsSheetWriter(report, reportParameters, workbook);
         openPositionsSheetWriter.build();
 
+        DailyPnlHistorySheetWriter dailyPnlHistorySheetWriter = new DailyPnlHistorySheetWriter(report, reportParameters, workbook);
+        dailyPnlHistorySheetWriter.build();
+
         File currDir = new File(".");
         String path = currDir.getAbsolutePath();
         String fileLocation = path.substring(0, path.length() - 1) + "temp.xlsx";
