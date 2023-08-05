@@ -17,174 +17,142 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
-public class AggregatedSheetWriter {
-
-    private final Workbook workbook;
-    private final Sheet sheet;
-
-    private final Report report;
-    private final ReportParameters parameters;
-
-    private final List<String> sortedInstrumentTypes;
-    private final List<Currency> sortedCurrencies;
-    private final List<Period> sortedPeriods;
+public class AggregatedSheetWriter extends AbstractSheetBuilder {
 
     public AggregatedSheetWriter(Report report, ReportParameters parameters, Workbook workbook) {
-        this.report = report;
-        this.parameters = parameters;
-        this.workbook = workbook;
-        this.sheet = workbook.createSheet(getSheetName());
-
-        this.sortedInstrumentTypes = Arrays.stream(InstrumentType.values())
-                .map(Objects::toString)
-                .sorted().collect(Collectors.toList());
-
-        this.sortedCurrencies = Arrays.stream(Currency.values())
-                .sorted().collect(Collectors.toList());
-
-        this.sortedPeriods = parameters.getPeriods().stream()
-                .sorted(Comparator.comparing(Period::getDayCount).reversed())
-                .collect(Collectors.toList());
+        super(workbook, report, parameters);
     }
 
+    @Override
     public String getSheetName() {
         return "Aggregated Results";
     }
 
+    @Override
     public void build() {
-        int tableStartIndex = 0;
-        for (Currency c: sortedCurrencies) {
-            AggregatedTableBuilder builder = new AggregatedTableBuilder(tableStartIndex, c);
-            tableStartIndex += builder.build();
-            tableStartIndex += 2;
+        for (Currency currency: getSortedCurrencies()) {
+            build(currency);
+            getExcelConnector().getRowCursor().moveBy(2);
         }
 
-        for (int i=1; i<6; i++) {
-            sheet.autoSizeColumn(i);
-        }
+        super.autoSizeAllColumns();
     }
 
-    @RequiredArgsConstructor
-    private class AggregatedTableBuilder {
-        private final int tableStartIndex;
-        private final Currency currency;
+    private void build(Currency currency) {
+        renderTableHeader(currency);
+        renderInstrumentTypes();
+        renderTotalValues(currency);
+        renderPnls(currency);
+    }
 
-        public int build() {
-            int totalRowCount = 1;
+    private void renderTableHeader(Currency currency) {
+        getExcelConnector().createRow();
 
-            totalRowCount += renderTableHeader();
-            totalRowCount += renderInstrumentTypes();
-            totalRowCount += renderTotalValues();
-            totalRowCount += renderPnls();
+        getExcelConnector().cellBuilder()
+                .value(MessageFormat.format("Aggregated Results {0}", currency))
+                .bold(true)
+                .alignment(HorizontalAlignment.CENTER)
+                .build();
 
-            return totalRowCount;
-        }
+        getExcelConnector().getSheet().addMergedRegion(new CellRangeAddress(
+                getExcelConnector().getRowCursor().current(),
+                getExcelConnector().getRowCursor().current(),
+                0,
+                4
+        ));
+    }
 
-        public int renderTableHeader() {
-            Row tableHeader = sheet.createRow(tableStartIndex);
+    private void renderInstrumentTypes() {
+        getExcelConnector().createRow();
 
-            Font font = workbook.createFont();
-            font.setBold(true);
+        getExcelConnector().cellBuilder()
+                .index(1)
+                .value("ALL")
+                .bold(true)
+                .alignment(HorizontalAlignment.RIGHT)
+                .build();
 
-            CellStyle cellStyle = workbook.createCellStyle();
-            cellStyle.setAlignment(HorizontalAlignment.CENTER);
-            cellStyle.setFont(font);
+        getSortedInstrumentTypes().forEach(instrument -> getExcelConnector().cellBuilder()
+                .value(instrument)
+                .bold(true)
+                .alignment(HorizontalAlignment.RIGHT)
+                .build());
+    }
 
-            Cell headerCell = tableHeader.createCell(0);
-            headerCell.setCellValue(MessageFormat.format("Aggregated Results {0}", currency));
-            headerCell.setCellStyle(cellStyle);
+    private void renderTotalValues(Currency currency) {
+        getExcelConnector().createRow();
 
-            sheet.addMergedRegion(new CellRangeAddress(tableStartIndex, tableStartIndex, 0, 4));
+        getExcelConnector().cellBuilder()
+                .value("Value")
+                .bold(true)
+                .build();
 
-            return 1;
-        }
+        getExcelConnector().cellBuilder()
+                .value(getReport().getAggregatedResult().getTotalValue().getValue().get(currency))
+                .currency(currency)
+                .alignment(HorizontalAlignment.RIGHT)
+                .build();
 
-        public int renderInstrumentTypes() {
-            Row instrumentTypeRow = sheet.createRow(tableStartIndex + 1);
-            instrumentTypeRow.createCell(1).setCellValue("ALL");
+        getSortedInstrumentTypes().forEach(instrument -> {
+            BigDecimal value = getReport().getAggregatedResult().getChildren()
+                    .get(instrument).getTotalValue().getValue()
+                    .get(currency);
 
-            for (int i=0; i<sortedInstrumentTypes.size(); i++) {
-                instrumentTypeRow.createCell(i + 2).setCellValue(sortedInstrumentTypes.get(i));
-            }
+            getExcelConnector().cellBuilder()
+                    .value(value)
+                    .currency(currency)
+                    .alignment(HorizontalAlignment.RIGHT)
+                    .build();
+        });
+    }
 
-            return 1;
-        }
+    private void renderPnls(Currency currency) {
+        getSortedPeriods().forEach(period -> {
+            getExcelConnector().createRow();
 
-        public int renderTotalValues() {
-            CellStyle currencyCellStyle = getCurrencyCellStyle(currency);
+            getExcelConnector().cellBuilder()
+                    .value(MessageFormat.format("PNL {0}", period))
+                    .bold(true)
+                    .build();
 
-            Row totalValuesRow = sheet.createRow(tableStartIndex + 2);
-            totalValuesRow.createCell(0).setCellValue("Value");
+            // For all instrument's pnl
+            getReport().getAggregatedResult().getPnlCalculation()
+                    .getOrDefault(period, Optional.empty())
+                    .map(pnl -> pnl.getValue().get(currency))
+                    .ifPresentOrElse(
+                            v -> getExcelConnector().cellBuilder()
+                                        .value(v)
+                                        .currency(currency)
+                                        .alignment(HorizontalAlignment.RIGHT)
+                                        .build()
 
-            BigDecimal value = report.getAggregatedResult().getTotalValue().getValue().get(currency);
-            Cell cell = totalValuesRow.createCell(1);
+                            ,
+                            () -> getExcelConnector().cellBuilder()
+                                    .value("-")
+                                    .alignment(HorizontalAlignment.RIGHT)
+                                    .build()
+                    );
 
-            cell.setCellStyle(currencyCellStyle);
-            cell.setCellValue(value.doubleValue());
-
-            for (int i=0; i<sortedInstrumentTypes.size(); i++) {
-                cell = totalValuesRow.createCell( i + 2);
-                value = report.getAggregatedResult().getChildren()
-                        .get(sortedInstrumentTypes.get(i)).getTotalValue().getValue()
-                        .get(currency);
-
-                cell.setCellValue(value.doubleValue());
-                cell.setCellStyle(currencyCellStyle);
-            }
-
-            return 1;
-        }
-
-        public int renderPnls() {
-            CellStyle currencyCellStyle = getCurrencyCellStyle(currency);
-
-            for (int i=0; i<sortedPeriods.size(); i++) {
-                Period period = sortedPeriods.get(i);
-                Row periodRow = sheet.createRow(tableStartIndex + 3 + i);
-
-                periodRow.createCell(0).setCellValue(MessageFormat.format("PNL {0}", period));
-                Cell cell = periodRow.createCell(1);
-
-                // For all instrument's pnl
-                report.getAggregatedResult().getPnlCalculation()
+            getSortedInstrumentTypes().forEach(instrumentType -> {
+                getReport().getAggregatedResult().getChildren().get(instrumentType)
+                        .getPnlCalculation()
                         .getOrDefault(period, Optional.empty())
                         .map(pnl -> pnl.getValue().get(currency))
                         .ifPresentOrElse(
-                                v -> {
-                                    cell.setCellValue(v.doubleValue());
-                                    cell.setCellStyle(currencyCellStyle);
-                                },
-                                () -> cell.setCellValue("-")
+                                v -> getExcelConnector().cellBuilder()
+                                        .value(v)
+                                        .currency(currency)
+                                        .alignment(HorizontalAlignment.RIGHT)
+                                        .build()
+
+                                ,
+                                () -> getExcelConnector().cellBuilder()
+                                        .value("-")
+                                        .alignment(HorizontalAlignment.RIGHT)
+                                        .build()
                         );
-
-                for (int j=0; j<sortedInstrumentTypes.size(); j++) {
-                    String instrumentType = sortedInstrumentTypes.get(j);
-                    Cell finalCell = periodRow.createCell(2 + j);
-
-                    report.getAggregatedResult().getChildren().get(instrumentType)
-                            .getPnlCalculation()
-                            .getOrDefault(period, Optional.empty())
-                            .map(pnl -> pnl.getValue().get(currency))
-                            .ifPresentOrElse(
-                                    v -> {
-                                        finalCell.setCellValue(v.doubleValue());
-                                        finalCell.setCellStyle(currencyCellStyle);
-                                        },
-                                    () -> finalCell.setCellValue("-")
-                            );
-                }
-
-            }
-
-            return parameters.getPeriods().size();
-        }
+            });
+        });
     }
 
-    public CellStyle getCurrencyCellStyle(Currency currency) {
-        CellStyle cs = workbook.createCellStyle();
-        DataFormat df = workbook.createDataFormat();
-        cs.setDataFormat(df.getFormat(currency.getPrefix() + "#,##0.0"));
-
-        return cs;
-    }
 }

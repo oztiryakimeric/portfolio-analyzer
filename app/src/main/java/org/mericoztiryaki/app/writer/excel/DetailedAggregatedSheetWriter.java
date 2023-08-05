@@ -17,31 +17,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public class DetailedAggregatedSheetWriter extends AggregatedSheetWriter {
+public class DetailedAggregatedSheetWriter extends AbstractSheetBuilder {
 
     private final List<String> symbols;
 
     public DetailedAggregatedSheetWriter(Report report, ReportParameters parameters, Workbook workbook) {
-        super(report, parameters, workbook);
+        super(workbook, report, parameters);
+
         this.symbols = getSortedInstrumentTypes().stream()
                 .map(instrumentType -> getReport().getAggregatedResult().getChildren().get(instrumentType))
-                .flatMap(res -> res.getChildren().keySet().stream())
+                .flatMap(res -> res.getChildren().keySet().stream().sorted())
                 .collect(Collectors.toList());
-    }
-
-    public void build() {
-        int tableStartIndex = 0;
-        for (Currency c: super.getSortedCurrencies()) {
-            AggregatedTableBuilder builder = new AggregatedTableBuilder(tableStartIndex, c);
-            tableStartIndex += builder.build();
-            tableStartIndex += 2;
-        }
-
-        getSheet().autoSizeColumn(1);
-        getSheet().autoSizeColumn(2);
-        getSheet().autoSizeColumn(3);
-        getSheet().autoSizeColumn(4);
-        getSheet().autoSizeColumn(5);
     }
 
     @Override
@@ -49,230 +35,212 @@ public class DetailedAggregatedSheetWriter extends AggregatedSheetWriter {
         return "Detailed Aggregated Results";
     }
 
-    @RequiredArgsConstructor
-    private class AggregatedTableBuilder {
-        private final int tableStartIndex;
-        private final Currency currency;
-
-        public int build() {
-            int totalRowCount = 1;
-
-            totalRowCount += renderTableHeader();
-            totalRowCount += renderInstrumentTypes();
-            totalRowCount += renderSymbols();
-            totalRowCount += renderTotalValues();
-            totalRowCount += renderPnls();
-
-            return totalRowCount;
+    @Override
+    public void build() {
+        for (Currency currency: getSortedCurrencies()) {
+            build(currency);
+            getExcelConnector().getRowCursor().moveBy(2);
         }
 
-        public int renderTableHeader() {
-            // Table header
-            Row tableHeader = getSheet().createRow(tableStartIndex);
+        super.autoSizeAllColumns();
+    }
 
-            Font font = getWorkbook().createFont();
-            font.setBold(true);
+    private void build(Currency currency) {
+        renderTableHeader(currency);
+        renderInstrumentTypes();
+        renderSymbols();
+        renderTotalValues(currency);
+        renderPnls(currency);
+    }
 
-            CellStyle cellStyle = getWorkbook().createCellStyle();
-            cellStyle.setFont(font);
+    private void renderTableHeader(Currency currency) {
+        getExcelConnector().createRow();
 
-            Cell headerCell = tableHeader.createCell(0);
-            headerCell.setCellValue(MessageFormat.format("Aggregated Results {0}", currency));
-            headerCell.setCellStyle(cellStyle);
+        getExcelConnector().cellBuilder()
+                .value(MessageFormat.format("Detailed Aggregated Results {0}", currency))
+                .bold(true)
+                .alignment(HorizontalAlignment.CENTER)
+                .build();
 
-            getSheet().addMergedRegion(new CellRangeAddress(tableStartIndex, tableStartIndex, 0, symbols.size() + 1));
+        getExcelConnector().getSheet().addMergedRegion(new CellRangeAddress(
+                getExcelConnector().getRowCursor().current(),
+                getExcelConnector().getRowCursor().current(),
+                0,
+                symbols.size() + 4
+        ));
+    }
 
-            return 1;
-        }
+    private void renderInstrumentTypes() {
+        getExcelConnector().createRow();
 
-        public int renderInstrumentTypes() {
-            Font font = getWorkbook().createFont();
-            font.setBold(true);
+        getExcelConnector().cellBuilder()
+                .index(1)
+                .value("ALL")
+                .bold(true)
+                .build();
 
-            CellStyle cellStyleBold = getWorkbook().createCellStyle();
-            cellStyleBold.setFont(font);
+        getSortedInstrumentTypes().forEach(instrumentType -> {
+            int symbolCount = (int) getReport().getAggregatedResult().getChildren().get(instrumentType)
+                    .getChildren().keySet().stream().count();
 
-            Row instrumentTypeRow = getSheet().createRow(tableStartIndex + 1);
-            Cell allCell = instrumentTypeRow.createCell(1);
-            allCell.setCellValue("All");
-            allCell.setCellStyle(cellStyleBold);
+            getExcelConnector().cellBuilder()
+                    .value(instrumentType)
+                    .bold(true)
+                    .build();
 
-            int lastColIndex = 2;
-            for (int i=0; i<getSortedInstrumentTypes().size(); i++) {
-                long symbolCount = getReport().getAggregatedResult().getChildren().get(getSortedInstrumentTypes()
-                        .get(i)).getChildren().keySet().stream().count();
+            getExcelConnector().getSheet().addMergedRegion(new CellRangeAddress(
+                    getExcelConnector().getRowCursor().current(),
+                    getExcelConnector().getRowCursor().current(),
+                    getExcelConnector().getColCursor().current(),
+                    getExcelConnector().getColCursor().current() + symbolCount
+            ));
 
-                getSheet().addMergedRegion(new CellRangeAddress(tableStartIndex + 1, tableStartIndex + 1, lastColIndex, lastColIndex + (int) symbolCount));
+            getExcelConnector().getColCursor().moveBy(symbolCount);
+        });
+    }
 
-                Cell cell = instrumentTypeRow.createCell(lastColIndex);
-                cell.setCellValue(getSortedInstrumentTypes().get(i));
-                cell.setCellStyle(cellStyleBold);
+    private void renderSymbols() {
+        getExcelConnector().createRow();
 
-                lastColIndex += symbolCount + 1;
-            }
+        getExcelConnector().getColCursor().moveTo(1);
+        getSortedInstrumentTypes().forEach(instrumentType -> {
+            AggregatedAnalyzeResult typeLevelResult = getReport().getAggregatedResult().getChildren().get(instrumentType);
 
-            return 1;
-        }
+            getExcelConnector().cellBuilder()
+                    .value("ALL")
+                    .bold(true)
+                    .alignment(HorizontalAlignment.RIGHT)
+                    .build();
 
-        public int renderSymbols() {
-            Font font = getWorkbook().createFont();
-            font.setBold(true);
-
-            CellStyle cellStyleBold = getWorkbook().createCellStyle();
-            cellStyleBold.setAlignment(HorizontalAlignment.CENTER);
-            cellStyleBold.setFont(font);
-
-            Row symbolRow = getSheet().createRow(tableStartIndex + 2);
-
-            int columnIndex = 2;
-            for (String instrumentType: getSortedInstrumentTypes()) {
-                AggregatedAnalyzeResult typeLevelResult = getReport().getAggregatedResult().getChildren().get(instrumentType);
-
-                Cell allCell = symbolRow.createCell(columnIndex++);
-                allCell.setCellValue("All");
-                allCell.setCellStyle(cellStyleBold);
-
-                List<AggregatedAnalyzeResult> symbolLevelResults = typeLevelResult.getChildren()
-                        .entrySet().stream()
-                        .sorted(Map.Entry.comparingByKey())
-                        .map(Map.Entry::getValue)
-                        .collect(Collectors.toList());
-
-                for (AggregatedAnalyzeResult symbolLevelResult: symbolLevelResults) {
-                    Cell cell = symbolRow.createCell(columnIndex++);
-                    cell.setCellValue(symbolLevelResult.getId());
-                    cell.setCellStyle(cellStyleBold);
-                }
-            }
-
-            return 1;
-        }
-
-        public int renderTotalValues() {
-            Font font = getWorkbook().createFont();
-            font.setBold(true);
-
-            CellStyle cellStyleBold = getWorkbook().createCellStyle();
-            cellStyleBold.setAlignment(HorizontalAlignment.CENTER);
-            cellStyleBold.setFont(font);
-
-            Row valuesRow = getSheet().createRow(tableStartIndex + 3);
-
-            Cell labelCell = valuesRow.createCell(0);
-            labelCell.setCellValue("Value");
-            labelCell.setCellStyle(cellStyleBold);
-
-            Cell totalCell = valuesRow.createCell(1);
-            totalCell.setCellValue(getReport().getAggregatedResult().getTotalValue()
-                    .getValue().get(currency).doubleValue());
-            totalCell.setCellStyle(getCurrencyCellStyle(currency));
-
-            int columnIndex = 2;
-            for (String instrumentType: getSortedInstrumentTypes()) {
-                AggregatedAnalyzeResult typeLevelResult = getReport().getAggregatedResult().getChildren().get(instrumentType);
-
-                valuesRow.createCell(columnIndex++).setCellValue(typeLevelResult.getTotalValue()
-                        .getValue().get(currency).doubleValue());
-
-                List<AggregatedAnalyzeResult> symbolLevelResults = typeLevelResult.getChildren()
-                        .entrySet().stream()
-                        .sorted(Map.Entry.comparingByKey())
-                        .map(Map.Entry::getValue)
-                        .collect(Collectors.toList());
-
-                for (AggregatedAnalyzeResult symbolLevelResult: symbolLevelResults) {
-                    Cell cell = valuesRow.createCell(columnIndex++);
-                    cell.setCellValue(symbolLevelResult.getTotalValue().getValue().get(currency).doubleValue());
-                    cell.setCellStyle(getCurrencyCellStyle(currency));
-                }
-            }
-
-            return 1;
-        }
-
-        public int renderPnls() {
-            CellStyle currencyCellStyle = getCurrencyCellStyle(currency);
-
-            Font font = getWorkbook().createFont();
-            font.setBold(true);
-
-            CellStyle cellStyleBold = getWorkbook().createCellStyle();
-            cellStyleBold.setAlignment(HorizontalAlignment.CENTER);
-            cellStyleBold.setFont(font);
-
-            for (int i=0; i<getSortedPeriods().size(); i++) {
-                Period period = getSortedPeriods().get(i);
-                Row periodRow = getSheet().createRow(tableStartIndex + 4 + i);
-
-                Cell labelCell = periodRow.createCell(0);
-                labelCell.setCellValue(MessageFormat.format("PNL {0}", period));
-                labelCell.setCellStyle(cellStyleBold);
-
-                Cell totalCell = periodRow.createCell(1);
-                getReport().getAggregatedResult().getPnlCalculation()
-                        .getOrDefault(period, Optional.empty())
-                        .map(pnl -> pnl.getValue().get(currency))
-                        .ifPresentOrElse(
-                                v -> {
-                                    totalCell.setCellValue(v.doubleValue());
-                                    totalCell.setCellStyle(currencyCellStyle);
-                                },
-                                () -> totalCell.setCellValue("-")
-                        );
-
-                int columnIndex = 2;
-                for (String instrumentType: getSortedInstrumentTypes()) {
-                    AggregatedAnalyzeResult typeLevelResult = getReport().getAggregatedResult().getChildren().get(instrumentType);
-
-                    Cell totalPnlCell = periodRow.createCell(columnIndex++);
-                    totalPnlCell.setCellStyle(currencyCellStyle);
-                    typeLevelResult.getPnlCalculation()
-                            .getOrDefault(period, Optional.empty())
-                            .map(pnl -> pnl.getValue().get(currency))
-                            .ifPresentOrElse(
-                                    v -> {
-                                        totalPnlCell.setCellValue(v.doubleValue());
-                                        totalPnlCell.setCellStyle(currencyCellStyle);
-                                    },
-                                    () -> totalPnlCell.setCellValue("-")
-                            );
-
-                    List<AggregatedAnalyzeResult> symbolLevelResults = getSortedResults(typeLevelResult);
-
-                    for (AggregatedAnalyzeResult symbolLevelResult: symbolLevelResults) {
-                        Cell pnlCell = periodRow.createCell(columnIndex++);
-                        symbolLevelResult.getPnlCalculation()
-                                .getOrDefault(period, Optional.empty())
-                                .map(pnl -> pnl.getValue().get(currency))
-                                .ifPresentOrElse(
-                                        v -> {
-                                            pnlCell.setCellValue(v.doubleValue());
-                                            pnlCell.setCellStyle(currencyCellStyle);
-                                        },
-                                        () -> pnlCell.setCellValue("-")
-                                );
-
-                    }
-                }
-            }
-
-            return getParameters().getPeriods().size();
-        }
-
-        private List<AggregatedAnalyzeResult> getSortedResults(AggregatedAnalyzeResult res) {
-            return res.getChildren()
+            List<AggregatedAnalyzeResult> symbolLevelResults = typeLevelResult.getChildren()
                     .entrySet().stream()
                     .sorted(Map.Entry.comparingByKey())
                     .map(Map.Entry::getValue)
                     .collect(Collectors.toList());
-        }
+
+            symbolLevelResults.forEach(symbol -> {
+                getExcelConnector().cellBuilder()
+                        .value(symbol.getId())
+                        .bold(true)
+                        .alignment(HorizontalAlignment.RIGHT)
+                        .build();
+            });
+        });
     }
 
-    public CellStyle getCurrencyCellStyle(Currency currency) {
-        CellStyle cs = getWorkbook().createCellStyle();
-        DataFormat df = getWorkbook().createDataFormat();
-        cs.setDataFormat(df.getFormat(currency.getPrefix() + "#,##0.0"));
+    private void renderTotalValues(Currency currency) {
+        getExcelConnector().createRow();
 
-        return cs;
+        getExcelConnector().cellBuilder()
+                .value("Value")
+                .bold(true)
+                .build();
+
+        getExcelConnector().cellBuilder()
+                .value(getReport().getAggregatedResult().getTotalValue().getValue().get(currency))
+                .currency(currency)
+                .build();
+
+        getSortedInstrumentTypes().forEach(instrumentType -> {
+            AggregatedAnalyzeResult typeLevelResult = getReport().getAggregatedResult().getChildren().get(instrumentType);
+
+            getExcelConnector().cellBuilder()
+                    .value(typeLevelResult.getTotalValue().getValue().get(currency))
+                    .currency(currency)
+                    .alignment(HorizontalAlignment.RIGHT)
+                    .build();
+
+            List<AggregatedAnalyzeResult> symbolLevelResults = typeLevelResult.getChildren()
+                    .entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(Map.Entry::getValue)
+                    .collect(Collectors.toList());
+
+            symbolLevelResults.forEach(symbol -> {
+                getExcelConnector().cellBuilder()
+                        .value(symbol.getTotalValue().getValue().get(currency))
+                        .currency(currency)
+                        .alignment(HorizontalAlignment.RIGHT)
+                        .build();
+            });
+        });
     }
+
+    private void renderPnls(Currency currency) {
+        getSortedPeriods().forEach(period -> {
+            getExcelConnector().createRow();
+
+            getExcelConnector().cellBuilder()
+                    .value(MessageFormat.format("PNL {0}", period))
+                    .bold(true)
+                    .build();
+
+            // Total Pnl Cell
+            getReport().getAggregatedResult().getPnlCalculation()
+                    .getOrDefault(period, Optional.empty())
+                    .map(pnl -> pnl.getValue().get(currency))
+                    .ifPresentOrElse(
+                            v -> getExcelConnector().cellBuilder()
+                                    .value(v)
+                                    .currency(currency)
+                                    .alignment(HorizontalAlignment.RIGHT)
+                                    .build()
+
+                            ,
+                            () -> getExcelConnector().cellBuilder()
+                                    .value("-")
+                                    .alignment(HorizontalAlignment.RIGHT)
+                                    .build()
+                    );
+
+            // Remaining cells for each instrument type
+            getSortedInstrumentTypes().forEach(instrumentType -> {
+                // Type Level
+                AggregatedAnalyzeResult typeLevelResult = getReport().getAggregatedResult().getChildren().get(instrumentType);
+                typeLevelResult.getPnlCalculation()
+                        .getOrDefault(period, Optional.empty())
+                        .map(pnl -> pnl.getValue().get(currency))
+                        .ifPresentOrElse(
+                                v -> getExcelConnector().cellBuilder()
+                                        .value(v)
+                                        .currency(currency)
+                                        .alignment(HorizontalAlignment.RIGHT)
+                                        .build()
+
+                                ,
+                                () -> getExcelConnector().cellBuilder()
+                                        .value("-")
+                                        .alignment(HorizontalAlignment.RIGHT)
+                                        .build()
+                        );
+
+                List<AggregatedAnalyzeResult> symbolLevelResults = typeLevelResult.getChildren()
+                        .entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .map(Map.Entry::getValue)
+                        .collect(Collectors.toList());
+
+                symbolLevelResults.forEach(symbolLevelResult -> {
+                    symbolLevelResult.getPnlCalculation()
+                            .getOrDefault(period, Optional.empty())
+                            .map(pnl -> pnl.getValue().get(currency))
+                            .ifPresentOrElse(
+                                    v -> getExcelConnector().cellBuilder()
+                                            .value(v)
+                                            .currency(currency)
+                                            .alignment(HorizontalAlignment.RIGHT)
+                                            .build()
+
+                                    ,
+                                    () -> getExcelConnector().cellBuilder()
+                                            .value("-")
+                                            .alignment(HorizontalAlignment.RIGHT)
+                                            .build()
+                            );
+                });
+            });
+
+        });
+    }
+
 }

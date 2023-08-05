@@ -26,11 +26,11 @@ public class ExcelReportWriter implements ReportWriter {
         DetailedAggregatedSheetWriter detailedAggregatedSheetWriter = new DetailedAggregatedSheetWriter(report, reportParameters, workbook);
         detailedAggregatedSheetWriter.build();
 
-        OpenPositionsSheetWriter openPositionsSheetWriter = new OpenPositionsSheetWriter(report, reportParameters, workbook);
-        openPositionsSheetWriter.build();
+        OpenPositionsSheetBuilder openPositionsSheetBuilder = new OpenPositionsSheetBuilder(report, reportParameters, workbook);
+        openPositionsSheetBuilder.build();
 
-        DailyPnlHistorySheetWriter dailyPnlHistorySheetWriter = new DailyPnlHistorySheetWriter(report, reportParameters, workbook);
-        dailyPnlHistorySheetWriter.build();
+        DailyPnlHistorySheetBuilder dailyPnlHistorySheetBuilder = new DailyPnlHistorySheetBuilder(report, reportParameters, workbook);
+        dailyPnlHistorySheetBuilder.build();
 
         File currDir = new File(".");
         String path = currDir.getAbsolutePath();
