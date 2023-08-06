@@ -1,5 +1,6 @@
 package org.mericoztiryaki.domain.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.ReportParameters;
@@ -18,15 +19,11 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 public class ReportService implements IReportService {
 
     private final IPriceService priceService;
     private final ITransactionService transactionService;
-
-    public ReportService() {
-        this.priceService = new PriceService();
-        this.transactionService = new TransactionService(this.priceService);
-    }
 
     @Override
     public Report generateReport(ReportParameters reportParameters) {

@@ -1,52 +1,48 @@
 package org.mericoztiryaki.app;
 
-import org.mericoztiryaki.app.writer.TextReportWriter;
-import org.mericoztiryaki.app.writer.excel.ExcelReportWriter;
-import org.mericoztiryaki.app.writer.ReportWriter;
+import org.mericoztiryaki.app.adapter.PriceApiAdapter;
+import org.mericoztiryaki.app.reader.CsvReader;
+import org.mericoztiryaki.app.reader.PortfolioReader;
+import org.mericoztiryaki.domain.ReportManager;
 import org.mericoztiryaki.domain.exception.PriceApiException;
-import org.mericoztiryaki.domain.model.ReportParameters;
+import org.mericoztiryaki.domain.model.ReportRequest;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.Period;
-import org.mericoztiryaki.domain.model.result.Report;
-import org.mericoztiryaki.domain.model.transaction.TransactionDefinition;
+import org.mericoztiryaki.domain.model.constant.ReportOutputType;
+import org.mericoztiryaki.domain.port.PriceSource;
+import org.mericoztiryaki.domain.service.impl.PriceService;
 import org.mericoztiryaki.domain.service.impl.ReportService;
+import org.mericoztiryaki.domain.service.impl.TransactionService;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 public class App {
 
     public static void main(String[] args) throws IOException, PriceApiException {
-        List<TransactionDefinition> transactions = readTransactions();
+        PriceSource priceSource = new PriceApiAdapter();
+        PriceService priceService = new PriceService(priceSource);
+        TransactionService transactionService = new TransactionService(priceService);
+        ReportService reportService = new ReportService(priceService, transactionService);
 
-        ReportParameters parameters = ReportParameters.builder()
-                .transactions(transactions)
+        ReportManager reportManager = new ReportManager(reportService);
+
+        PortfolioReader csvReader = new CsvReader("/Users/meric/dev/portfolio-vis/.dev-space/dev-portfolio-3.csv");
+
+        ReportRequest reportRequest = ReportRequest.builder()
+                .transactions(csvReader.read())
                 .reportDate(LocalDate.now())
                 .periods(Set.of(Period.D1, Period.W1, Period.M1, Period.ALL))
                 .currency(Currency.TRY)
+                .outputType(ReportOutputType.EXCEL)
+                .outputFileLocation(Paths.get("").toAbsolutePath().toString() + "/out.xlsx")
                 .build();
 
-        Report report = new ReportService().generateReport(parameters);
-        ReportWriter writer = new ExcelReportWriter();
-
-        System.out.println(writer.build(report, parameters));
+        reportManager.generateReport(reportRequest);
 
         System.out.println("EDOM");
-    }
-
-    private static List<TransactionDefinition> readTransactions() throws IOException {
-        List<List<String>> rawCsvFile = Util.readCsvFile(".dev-space/dev-portfolio-3.csv");
-
-        List<TransactionDefinition> defs = new ArrayList<>();
-        for(int i=0; i<rawCsvFile.size(); i++) {
-            List<String> row = rawCsvFile.get(i);
-            defs.add(new TransactionDefinition(i, row.get(0), row.get(1), row.get(2), row.get(3), row.get(4),
-                    row.get(5), row.get(6), row.get(7)));
-        }
-        return defs;
     }
 
 }

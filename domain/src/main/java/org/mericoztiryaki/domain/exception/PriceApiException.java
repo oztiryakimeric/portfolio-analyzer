@@ -15,4 +15,5 @@ public class PriceApiException extends RuntimeException {
     private LocalDate start;
 
     private LocalDate end;
+
 }

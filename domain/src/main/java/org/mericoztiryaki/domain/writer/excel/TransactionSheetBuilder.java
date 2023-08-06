@@ -1,4 +1,4 @@
-package org.mericoztiryaki.app.writer.excel;
+package org.mericoztiryaki.domain.writer.excel;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.mericoztiryaki.domain.model.ReportParameters;

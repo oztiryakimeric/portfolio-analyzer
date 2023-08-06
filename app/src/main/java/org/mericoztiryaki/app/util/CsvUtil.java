@@ -1,4 +1,4 @@
-package org.mericoztiryaki.app;
+package org.mericoztiryaki.app.util;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Util {
+public class CsvUtil {
 
     public static List<List<String>> readCsvFile(String filePath) throws IOException {
         List<List<String>> data = new ArrayList<>();

@@ -1,4 +1,4 @@
-package org.mericoztiryaki.app.writer;
+package org.mericoztiryaki.domain.writer.text;
 
 import de.vandermeer.asciitable.AT_Row;
 import de.vandermeer.asciitable.AsciiTable;
@@ -11,6 +11,7 @@ import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.result.Report;
 import org.mericoztiryaki.domain.util.BigDecimalUtil;
+import org.mericoztiryaki.domain.writer.ReportWriter;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -27,7 +28,7 @@ public class TextReportWriter implements ReportWriter {
     private static final DecimalFormat RATE_FORMAT = new DecimalFormat("#0.00");
 
     @Override
-    public String build(Report report, ReportParameters reportParameters) {
+    public byte[] build(Report report, ReportParameters reportParameters) {
         StringBuffer buffer = new StringBuffer();
 
         buffer.append(renderAggregatedResults(report, reportParameters));
@@ -38,7 +39,10 @@ public class TextReportWriter implements ReportWriter {
         buffer.append("\n\n");
         buffer.append(renderPnlHistory(report.getDailyPnlHistory(), reportParameters, "Daily Pnl History"));
 
-        return buffer.toString();
+        String result = buffer.toString();
+        System.out.println(result);
+
+        return result.getBytes();
     }
 
     private String renderAggregatedResults(Report report, ReportParameters parameters) {

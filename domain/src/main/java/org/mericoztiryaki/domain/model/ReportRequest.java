@@ -12,9 +12,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
-@Getter
 @Builder
-public class ReportParameters {
+@Getter
+public class ReportRequest {
 
     private List<TransactionDefinition> transactions;
 
@@ -29,6 +29,5 @@ public class ReportParameters {
     private ReportOutputType outputType;
 
     private String outputFileLocation;
-
 
 }

@@ -1,13 +1,10 @@
-package org.mericoztiryaki.app.writer.excel;
+package org.mericoztiryaki.domain.writer.excel;
 
 import lombok.Getter;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.mericoztiryaki.domain.model.constant.Currency;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -197,13 +194,13 @@ public class ExcelConnector {
             return cell;
         }
 
-        public enum ColorFormat {
-            RED_GREEN_FORMAT;
-        }
-
         private void setGreenBlueBackground(CellStyle cellStyle) {
             cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             cellStyle.setFillForegroundColor(this.valueBigDecimal.doubleValue() < 0 ? IndexedColors.ORANGE.index : IndexedColors.LIME.index);
         }
+    }
+
+    public enum ColorFormat {
+        RED_GREEN_FORMAT;
     }
 }

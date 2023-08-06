@@ -1,26 +1,23 @@
-package org.mericoztiryaki.app.writer.excel;
+package org.mericoztiryaki.domain.writer.excel;
 
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.mericoztiryaki.app.writer.ReportWriter;
+import org.mericoztiryaki.domain.exception.ReportWriterException;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.result.Report;
+import org.mericoztiryaki.domain.writer.ReportWriter;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class ExcelReportWriter implements ReportWriter {
 
-    private final Workbook workbook;
-
-    public ExcelReportWriter() {
-        this.workbook = new XSSFWorkbook();
-    }
-
     @Override
-    public String build(Report report, ReportParameters reportParameters) {
+    public byte[] build(Report report, ReportParameters reportParameters) {
+        Workbook workbook  = new XSSFWorkbook();
+
         AggregatedSheetWriter aggregatedSheetWriter = new AggregatedSheetWriter(report, reportParameters, workbook);
         aggregatedSheetWriter.build();
 
@@ -36,19 +33,27 @@ public class ExcelReportWriter implements ReportWriter {
         TransactionSheetBuilder transactionSheetBuilder = new TransactionSheetBuilder(workbook, report, reportParameters);
         transactionSheetBuilder.build();
 
-        File currDir = new File(".");
-        String path = currDir.getAbsolutePath();
-        String fileLocation = path.substring(0, path.length() - 1) + "temp.xlsx";
+        byte[] content = convertToByteArray(workbook);
 
         try {
-            FileOutputStream outputStream = new FileOutputStream(fileLocation);
-            workbook.write(outputStream);
+            Files.write(Paths.get(reportParameters.getOutputFileLocation()), content);
+        } catch (IOException e) {
+            throw new ReportWriterException(e);
+        }
+
+        return content;
+    }
+
+    private byte[] convertToByteArray(Workbook workbook) {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            workbook.write(bos);
             workbook.close();
+
+            return bos.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        return "";
     }
 
 }
