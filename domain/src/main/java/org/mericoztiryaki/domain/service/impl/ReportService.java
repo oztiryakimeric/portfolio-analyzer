@@ -43,7 +43,7 @@ public class ReportService implements IReportService {
         Map<String, Quotes> dailyPnlHistory = createPnlHistory(transactions, reportParameters, 1, 7);
         Map<String, Quotes> weeklyPnlHistory = createPnlHistory(transactions, reportParameters, 7, 4);
 
-        return new Report(aggregatedResult, openPositions, weeklyPnlHistory, dailyPnlHistory);
+        return new Report(transactions, aggregatedResult, openPositions, weeklyPnlHistory, dailyPnlHistory);
     }
 
     private List<InstrumentAnalyzeResult> createOpenPositionsTable(List<ITransaction> transactions, ReportParameters reportParameters) {

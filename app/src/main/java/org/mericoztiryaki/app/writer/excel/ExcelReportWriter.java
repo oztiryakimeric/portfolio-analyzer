@@ -33,6 +33,9 @@ public class ExcelReportWriter implements ReportWriter {
         DailyPnlHistorySheetBuilder dailyPnlHistorySheetBuilder = new DailyPnlHistorySheetBuilder(report, reportParameters, workbook);
         dailyPnlHistorySheetBuilder.build();
 
+        TransactionSheetBuilder transactionSheetBuilder = new TransactionSheetBuilder(workbook, report, reportParameters);
+        transactionSheetBuilder.build();
+
         File currDir = new File(".");
         String path = currDir.getAbsolutePath();
         String fileLocation = path.substring(0, path.length() - 1) + "temp.xlsx";

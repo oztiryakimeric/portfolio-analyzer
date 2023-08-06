@@ -7,6 +7,8 @@ import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.mericoztiryaki.domain.model.constant.Currency;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 public class ExcelConnector {
@@ -97,6 +99,8 @@ public class ExcelConnector {
 
         private BigDecimal valueBigDecimal;
 
+        private LocalDateTime valueLocalDateTime;
+
         private boolean isBold;
 
         private Currency currency;
@@ -104,6 +108,8 @@ public class ExcelConnector {
         private HorizontalAlignment alignment;
 
         private boolean percentage;
+
+        private ColorFormat colorFormat;
 
         public CellBuilder index(Integer index) {
             this.index = index;
@@ -120,6 +126,11 @@ public class ExcelConnector {
             return this;
         }
 
+        public CellBuilder value(LocalDateTime value) {
+            this.valueLocalDateTime = value;
+            return this;
+        }
+
         public CellBuilder bold(boolean bold) {
             this.isBold = bold;
             return this;
@@ -127,16 +138,23 @@ public class ExcelConnector {
 
         public CellBuilder currency(Currency currency) {
             this.currency = currency;
+            this.colorFormat = ColorFormat.RED_GREEN_FORMAT;
             return this;
         }
 
         public CellBuilder percentage(boolean percentage) {
             this.percentage = percentage;
+            this.colorFormat = ColorFormat.RED_GREEN_FORMAT;
             return this;
         }
 
         public CellBuilder alignment(HorizontalAlignment alignment) {
             this.alignment = alignment;
+            return this;
+        }
+
+        public CellBuilder colorFormat(ColorFormat colorFormat) {
+            this.colorFormat = colorFormat;
             return this;
         }
 
@@ -147,6 +165,8 @@ public class ExcelConnector {
                 cell.setCellValue(this.valueStr);
             } else if (valueBigDecimal != null) {
                 cell.setCellValue(this.valueBigDecimal.doubleValue());
+            } else if (valueLocalDateTime != null) {
+                cell.setCellValue(this.valueLocalDateTime);
             }
 
             CellStyle cs = workbook.createCellStyle();
@@ -162,17 +182,23 @@ public class ExcelConnector {
             if (currency != null) {
                 DataFormat df = workbook.createDataFormat();
                 cs.setDataFormat(df.getFormat(currency.getPrefix() + "#,##0.0"));
-                setGreenBlueBackground(cs);
             } else if (percentage) {
                 cs.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
-                setGreenBlueBackground(cs);
             }
 
             if (alignment != null) {
                 cs.setAlignment(alignment);
             }
 
+            if (colorFormat == ColorFormat.RED_GREEN_FORMAT) {
+                setGreenBlueBackground(cs);
+            }
+
             return cell;
+        }
+
+        public enum ColorFormat {
+            RED_GREEN_FORMAT;
         }
 
         private void setGreenBlueBackground(CellStyle cellStyle) {
