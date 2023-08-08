@@ -19,6 +19,8 @@ public class AggregatedAnalyzeResult {
 
     private final Map<Period, Optional<Quotes>> pnlCalculation = new HashMap<>();
 
+    private final Map<Period, Optional<Quotes>> roiCalculation = new HashMap<>();
+
     private Quotes totalValue = Quotes.ZERO;
 
 }

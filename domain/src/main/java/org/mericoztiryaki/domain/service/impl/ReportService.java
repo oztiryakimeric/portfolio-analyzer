@@ -5,6 +5,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.ReportParameters;
+import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.result.AggregatedAnalyzeResult;
@@ -17,11 +18,10 @@ import org.mericoztiryaki.domain.service.ITransactionService;
 import org.mericoztiryaki.domain.util.BigDecimalUtil;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
+import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,7 +41,7 @@ public class ReportService implements IReportService {
                 .sorted(Comparator.comparing(ITransaction::getDate))
                 .collect(Collectors.toList());
 
-        AggregatedAnalyzeResult aggregatedResult = createTotalsTable(transactions, reportParameters);
+        AggregatedAnalyzeResult aggregatedResult = createAggregatedResult(transactions, reportParameters);
         List<InstrumentAnalyzeResult> openPositions = createOpenPositionsTable(transactions, reportParameters);
 
         Map<PnlHistoryUnit, Map<String, Quotes>> pnlHistory = reportParameters.getPnlHistoryUnits()
@@ -89,7 +89,7 @@ public class ReportService implements IReportService {
                 .collect(Collectors.toList());
     }
 
-    private AggregatedAnalyzeResult createTotalsTable(List<ITransaction> transactions, ReportParameters reportParameters) {
+    private AggregatedAnalyzeResult createAggregatedResult(List<ITransaction> transactions, ReportParameters reportParameters) {
         AggregatedAnalyzeResult rootResult = new AggregatedAnalyzeResult("Total");
 
         // Group by instrument
@@ -134,6 +134,15 @@ public class ReportService implements IReportService {
         if (period == Period.ALL && !BigDecimalUtil.isZero(analyzer.getTotalAmount())) {
             // If open position
             targetResult.setTotalValue(QuotesUtil.add(targetResult.getTotalValue(), analyzer.calculateTotalValue()));
+        }
+
+        if (!QuotesUtil.isZero(targetResult.getTotalValue())) {
+            targetResult.getRoiCalculation().put(period, Optional.of(
+                    QuotesUtil.divide(
+                            targetResult.getPnlCalculation().get(period).orElse(Quotes.ZERO),
+                            QuotesUtil.subtract(targetResult.getTotalValue(), targetResult.getPnlCalculation().get(period).orElse(Quotes.ZERO))
+                    )
+            ));
         }
     }
 

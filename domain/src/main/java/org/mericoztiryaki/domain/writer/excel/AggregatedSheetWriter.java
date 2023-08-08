@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.xmlbeans.impl.store.Cur;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.result.Report;
@@ -39,6 +40,7 @@ public class AggregatedSheetWriter extends AbstractSheetBuilder {
         renderInstrumentTypes();
         renderTotalValues(currency);
         renderPnls(currency);
+        renderRois(currency);
     }
 
     private void renderTableHeader(Currency currency) {
@@ -120,9 +122,7 @@ public class AggregatedSheetWriter extends AbstractSheetBuilder {
                                         .value(v)
                                         .currency(currency)
                                         .alignment(HorizontalAlignment.RIGHT)
-                                        .build()
-
-                            ,
+                                        .build(),
                             () -> getExcelConnector().cellBuilder()
                                     .value("-")
                                     .alignment(HorizontalAlignment.RIGHT)
@@ -139,9 +139,7 @@ public class AggregatedSheetWriter extends AbstractSheetBuilder {
                                         .value(v)
                                         .currency(currency)
                                         .alignment(HorizontalAlignment.RIGHT)
-                                        .build()
-
-                                ,
+                                        .build(),
                                 () -> getExcelConnector().cellBuilder()
                                         .value("-")
                                         .alignment(HorizontalAlignment.RIGHT)
@@ -151,4 +149,49 @@ public class AggregatedSheetWriter extends AbstractSheetBuilder {
         });
     }
 
+    private void renderRois(Currency currency) {
+        getSortedPeriods().forEach(period -> {
+            getExcelConnector().createRow();
+
+            getExcelConnector().cellBuilder()
+                    .value(MessageFormat.format("ROI {0}", period))
+                    .bold(true)
+                    .build();
+
+            // For all instrument's pnl
+            getReport().getAggregatedResult().getRoiCalculation()
+                    .getOrDefault(period, Optional.empty())
+                    .map(roi -> roi.getValue().get(currency))
+                    .ifPresentOrElse(
+                            v -> getExcelConnector().cellBuilder()
+                                    .value(v)
+                                    .percentage(true)
+                                    .alignment(HorizontalAlignment.RIGHT)
+                                    .build()
+                            ,
+                            () -> getExcelConnector().cellBuilder()
+                                    .value("-")
+                                    .alignment(HorizontalAlignment.RIGHT)
+                                    .build()
+                    );
+
+            getSortedInstrumentTypes().forEach(instrumentType -> {
+                getReport().getAggregatedResult().getChildren().get(instrumentType)
+                        .getRoiCalculation()
+                        .getOrDefault(period, Optional.empty())
+                        .map(roi -> roi.getValue().get(currency))
+                        .ifPresentOrElse(
+                                v -> getExcelConnector().cellBuilder()
+                                        .value(v)
+                                        .percentage(true)
+                                        .alignment(HorizontalAlignment.RIGHT)
+                                        .build(),
+                                () -> getExcelConnector().cellBuilder()
+                                        .value("-")
+                                        .alignment(HorizontalAlignment.RIGHT)
+                                        .build()
+                        );
+            });
+        });
+    }
 }

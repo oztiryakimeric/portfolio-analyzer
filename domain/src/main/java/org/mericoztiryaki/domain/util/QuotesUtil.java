@@ -11,6 +11,10 @@ import java.util.stream.Collectors;
 
 public class QuotesUtil {
 
+    public static boolean isZero(Quotes q1) {
+        return q1.getValue().values().stream().anyMatch(BigDecimalUtil::isZero);
+    }
+
     // Quotes - BigDecimal Functions
     public static Quotes multiply(Quotes q1, BigDecimal constant) {
         return new Quotes(applyToQuotes(q1.getValue(), e -> e.getValue().multiply(constant)));
