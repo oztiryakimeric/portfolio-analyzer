@@ -8,6 +8,7 @@ import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.ReportRequest;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.Period;
+import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.constant.ReportOutputType;
 import org.mericoztiryaki.domain.port.PriceSource;
 import org.mericoztiryaki.domain.service.impl.PriceService;
@@ -35,6 +36,7 @@ public class App {
                 .transactions(csvReader.read())
                 .reportDate(LocalDate.now())
                 .periods(Set.of(Period.D1, Period.W1, Period.M1, Period.ALL))
+                .pnlHistoryUnits(Set.of(PnlHistoryUnit.DAY, PnlHistoryUnit.WEEK, PnlHistoryUnit.MONTH, PnlHistoryUnit.YEAR))
                 .currency(Currency.TRY)
                 .outputType(ReportOutputType.EXCEL)
                 .outputFileLocation(Paths.get("").toAbsolutePath().toString() + "/out.xlsx")

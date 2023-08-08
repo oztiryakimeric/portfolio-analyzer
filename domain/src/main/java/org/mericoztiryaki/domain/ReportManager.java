@@ -23,4 +23,5 @@ public class ReportManager {
         ReportWriter writer = WriterFactory.getWriter(parameters.getOutputType());
         writer.build(report, parameters);
     }
+
 }

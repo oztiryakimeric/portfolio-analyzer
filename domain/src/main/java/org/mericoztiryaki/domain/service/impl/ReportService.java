@@ -1,10 +1,12 @@
 package org.mericoztiryaki.domain.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Period;
+import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.result.AggregatedAnalyzeResult;
 import org.mericoztiryaki.domain.model.result.InstrumentAnalyzeResult;
 import org.mericoztiryaki.domain.model.result.Report;
@@ -15,7 +17,12 @@ import org.mericoztiryaki.domain.service.ITransactionService;
 import org.mericoztiryaki.domain.util.BigDecimalUtil;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
+import java.text.MessageFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,10 +44,16 @@ public class ReportService implements IReportService {
         AggregatedAnalyzeResult aggregatedResult = createTotalsTable(transactions, reportParameters);
         List<InstrumentAnalyzeResult> openPositions = createOpenPositionsTable(transactions, reportParameters);
 
-        Map<String, Quotes> dailyPnlHistory = createPnlHistory(transactions, reportParameters, 1, 7);
-        Map<String, Quotes> weeklyPnlHistory = createPnlHistory(transactions, reportParameters, 7, 4);
+        Map<PnlHistoryUnit, Map<String, Quotes>> pnlHistory = reportParameters.getPnlHistoryUnits()
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                (unit) -> unit,
+                                (unit) -> createPnlHistory(transactions, reportParameters, unit, unit.getSize())
+                        )
+                );
 
-        return new Report(transactions, aggregatedResult, openPositions, weeklyPnlHistory, dailyPnlHistory);
+        return new Report(transactions, aggregatedResult, openPositions, pnlHistory);
     }
 
     private List<InstrumentAnalyzeResult> createOpenPositionsTable(List<ITransaction> transactions, ReportParameters reportParameters) {
@@ -109,7 +122,6 @@ public class ReportService implements IReportService {
                     appendAnalyzeResult(symbolResult, periodAnalyzer, period);
                 }
             }
-
         }
 
         return rootResult;
@@ -125,31 +137,62 @@ public class ReportService implements IReportService {
         }
     }
 
-    private Map<String, Quotes> createPnlHistory(List<ITransaction> transactions, ReportParameters reportParameters, int size, int count) {
+    private Map<String, Quotes> createPnlHistory(List<ITransaction> transactions, ReportParameters reportParameters, PnlHistoryUnit unit, int count) {
         // Group by instrument
         Map<Instrument, List<ITransaction>> groupedTransactions = transactions
                 .stream()
                 .collect(Collectors.groupingBy(ITransaction::getInstrument));
 
-
-        Map<LocalDate, Quotes> pnlSums = new HashMap<>();
+        Map<String, Quotes> pnlSums = new LinkedHashMap<>();
 
         for (Instrument instrument: groupedTransactions.keySet()) {
-            for (int i=0; i<count; i++) {
-                LocalDate windowStart = LocalDate.now().minusDays((i + 1)* size);
-                LocalDate windowEnd = LocalDate.now().minusDays(i * size);
+            List<Pair<LocalDate, LocalDate>> priceWindows = createPriceWindows(unit, count);
 
+            priceWindows.forEach(window -> {
+                String windowId = MessageFormat.format("{0} -> {1}", window.getLeft(), window.getRight());
                 List<ITransaction> transactionWindow = transactionService.createTransactionSetByWindow(
-                        groupedTransactions.get(instrument), windowStart, windowEnd);
+                        groupedTransactions.get(instrument), window.getLeft(), window.getRight());
 
-                Analyzer periodAnalyzer = new Analyzer(priceService, transactionWindow, windowEnd);
-                Quotes prevSum = pnlSums.computeIfAbsent(windowEnd, (p) -> Quotes.ZERO);
+                Analyzer periodAnalyzer = new Analyzer(priceService, transactionWindow, window.getRight());
+                Quotes prevSum = pnlSums.computeIfAbsent(windowId, (p) -> Quotes.ZERO);
 
-                pnlSums.put(windowEnd, QuotesUtil.add(prevSum, periodAnalyzer.calculatePNL()));
-            }
-
+                pnlSums.put(windowId, QuotesUtil.add(prevSum, periodAnalyzer.calculatePNL()));
+            });
         }
 
-        return pnlSums.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue()));
+        return pnlSums;
     }
+
+    private List<Pair<LocalDate, LocalDate>> createPriceWindows(PnlHistoryUnit unit, int count) {
+        List<Pair<LocalDate, LocalDate>> windows = new ArrayList<>();
+
+        for (int i = 0; i < count; i++) {
+            LocalDate start = null;
+            LocalDate end = null;
+            if (unit == PnlHistoryUnit.DAY) {
+                start = LocalDate.now().minusDays(i + 1);
+                end = LocalDate.now().minusDays(i);
+            } else if (unit == PnlHistoryUnit.WEEK) {
+                start = LocalDate.now().minusWeeks(i).with(DayOfWeek.MONDAY).minusDays(1);
+                end = LocalDate.now().minusWeeks(i).with(DayOfWeek.SUNDAY);
+            } else if (unit == PnlHistoryUnit.MONTH) {
+                start = LocalDate.now().minusMonths(i).with(TemporalAdjusters.firstDayOfMonth()).minusDays(1);
+                end = LocalDate.now().minusMonths(i).with(TemporalAdjusters.lastDayOfMonth());
+            } else if (unit == PnlHistoryUnit.YEAR) {
+                start = LocalDate.now().minusYears(i).with(TemporalAdjusters.firstDayOfYear()).minusDays(1);
+                end = LocalDate.now().minusYears(i).with(TemporalAdjusters.lastDayOfYear());
+            } else {
+                throw new RuntimeException("Unit not implemented: " + unit);
+            }
+
+            if (end.isAfter(LocalDate.now())) {
+                end = LocalDate.now();
+            }
+
+            windows.add(Pair.of(start, end));
+        }
+
+        return windows;
+    }
+
 }

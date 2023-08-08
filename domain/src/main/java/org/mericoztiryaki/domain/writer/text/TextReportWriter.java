@@ -9,6 +9,7 @@ import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.model.constant.Period;
+import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.result.Report;
 import org.mericoztiryaki.domain.util.BigDecimalUtil;
 import org.mericoztiryaki.domain.writer.ReportWriter;
@@ -37,7 +38,7 @@ public class TextReportWriter implements ReportWriter {
         buffer.append(renderOpenPositions(report, reportParameters));
 
         buffer.append("\n\n");
-        buffer.append(renderPnlHistory(report.getDailyPnlHistory(), reportParameters, "Daily Pnl History"));
+        buffer.append(renderPnlHistory(report.getPnlHistory().get(PnlHistoryUnit.DAY), reportParameters, "Daily Pnl History"));
 
         String result = buffer.toString();
         System.out.println(result);

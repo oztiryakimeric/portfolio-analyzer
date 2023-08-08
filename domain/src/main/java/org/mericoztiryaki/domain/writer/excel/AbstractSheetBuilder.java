@@ -53,4 +53,10 @@ public abstract class AbstractSheetBuilder {
             excelConnector.getSheet().autoSizeColumn(i);
         }
     }
+
+    public void autoSizeAllColumns(int count) {
+        for (int i=0; i<count; i++) {
+            excelConnector.getSheet().autoSizeColumn(i);
+        }
+    }
 }

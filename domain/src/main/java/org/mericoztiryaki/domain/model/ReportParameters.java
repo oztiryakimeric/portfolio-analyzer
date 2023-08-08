@@ -2,10 +2,7 @@ package org.mericoztiryaki.domain.model;
 
 import lombok.Builder;
 import lombok.Getter;
-import org.mericoztiryaki.domain.model.constant.Currency;
-import org.mericoztiryaki.domain.model.constant.InstrumentType;
-import org.mericoztiryaki.domain.model.constant.Period;
-import org.mericoztiryaki.domain.model.constant.ReportOutputType;
+import org.mericoztiryaki.domain.model.constant.*;
 import org.mericoztiryaki.domain.model.transaction.TransactionDefinition;
 
 import java.time.LocalDate;
@@ -21,6 +18,8 @@ public class ReportParameters {
     private LocalDate reportDate;
 
     private Set<Period> periods;
+
+    private Set<PnlHistoryUnit> pnlHistoryUnits;
 
     private Currency currency;
 

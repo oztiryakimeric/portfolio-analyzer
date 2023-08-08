@@ -3,9 +3,12 @@ package org.mericoztiryaki.domain.util;
 import org.mericoztiryaki.domain.exception.ReportParametersException;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.ReportRequest;
+import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.constant.ReportOutputType;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ReportParametersUtil {
 
@@ -20,6 +23,10 @@ public class ReportParametersUtil {
 
         if (reportRequest.getPeriods() == null || reportRequest.getPeriods().isEmpty()) {
             throw new ReportParametersException("Periods must not be empty");
+        }
+
+        if (reportRequest.getPnlHistoryUnits() == null || reportRequest.getPnlHistoryUnits().isEmpty()) {
+            reportRequest.setPnlHistoryUnits(new HashSet<>());
         }
 
         if (reportRequest.getCurrency() == null) {
@@ -39,6 +46,7 @@ public class ReportParametersUtil {
                 .transactions(reportRequest.getTransactions())
                 .reportDate(reportRequest.getReportDate())
                 .periods(reportRequest.getPeriods())
+                .pnlHistoryUnits(reportRequest.getPnlHistoryUnits())
                 .currency(reportRequest.getCurrency())
                 .filteredInstrumentTypes(reportRequest.getFilteredInstrumentTypes())
                 .outputType(reportRequest.getOutputType())

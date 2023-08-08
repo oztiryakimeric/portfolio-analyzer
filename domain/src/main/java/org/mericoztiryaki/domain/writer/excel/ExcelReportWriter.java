@@ -18,19 +18,19 @@ public class ExcelReportWriter implements ReportWriter {
     public byte[] build(Report report, ReportParameters reportParameters) {
         Workbook workbook  = new XSSFWorkbook();
 
-        AggregatedSheetWriter aggregatedSheetWriter = new AggregatedSheetWriter(report, reportParameters, workbook);
+        AbstractSheetBuilder aggregatedSheetWriter = new AggregatedSheetWriter(report, reportParameters, workbook);
         aggregatedSheetWriter.build();
 
-        DetailedAggregatedSheetWriter detailedAggregatedSheetWriter = new DetailedAggregatedSheetWriter(report, reportParameters, workbook);
+        AbstractSheetBuilder detailedAggregatedSheetWriter = new DetailedAggregatedSheetWriter(report, reportParameters, workbook);
         detailedAggregatedSheetWriter.build();
 
-        OpenPositionsSheetBuilder openPositionsSheetBuilder = new OpenPositionsSheetBuilder(report, reportParameters, workbook);
+        AbstractSheetBuilder openPositionsSheetBuilder = new OpenPositionsSheetBuilder(report, reportParameters, workbook);
         openPositionsSheetBuilder.build();
 
-        DailyPnlHistorySheetBuilder dailyPnlHistorySheetBuilder = new DailyPnlHistorySheetBuilder(report, reportParameters, workbook);
-        dailyPnlHistorySheetBuilder.build();
+        AbstractSheetBuilder pnlHistorySheetBuilder = new PnlHistorySheetBuilder(report, reportParameters, workbook);
+        pnlHistorySheetBuilder.build();
 
-        TransactionSheetBuilder transactionSheetBuilder = new TransactionSheetBuilder(workbook, report, reportParameters);
+        AbstractSheetBuilder transactionSheetBuilder = new TransactionSheetBuilder(workbook, report, reportParameters);
         transactionSheetBuilder.build();
 
         byte[] content = convertToByteArray(workbook);

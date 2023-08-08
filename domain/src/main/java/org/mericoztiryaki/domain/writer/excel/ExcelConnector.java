@@ -28,7 +28,12 @@ public class ExcelConnector {
 
     public Row createRow(int index) {
         this.colCursor.reset();
-        this.lastRow = sheet.createRow(index);
+
+        this.lastRow = sheet.getRow(index);
+        if (lastRow == null) {
+            this.lastRow = sheet.createRow(index);
+        }
+
         return this.lastRow;
     }
 
@@ -52,7 +57,7 @@ public class ExcelConnector {
 
     @Getter
     public static class Cursor {
-        private final int initialIndex;
+        private int initialIndex;
 
         private int index;
         private int biggest;
@@ -77,6 +82,11 @@ public class ExcelConnector {
 
         public void reset() {
             index = initialIndex;
+        }
+
+        public void reset(int index) {
+            initialIndex = index;
+            reset();
         }
 
         public void moveBy(int amount) {

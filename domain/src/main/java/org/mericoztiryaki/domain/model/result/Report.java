@@ -3,6 +3,7 @@ package org.mericoztiryaki.domain.model.result;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.mericoztiryaki.domain.model.Quotes;
+import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
 
 import java.util.List;
@@ -18,8 +19,6 @@ public class Report {
 
     private final List<InstrumentAnalyzeResult> openPositions;
 
-    private final Map<String, Quotes> weeklyPnlHistory;
-
-    private final Map<String, Quotes> dailyPnlHistory;
+    private final Map<PnlHistoryUnit, Map<String, Quotes>> pnlHistory;
 
 }
