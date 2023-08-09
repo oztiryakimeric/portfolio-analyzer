@@ -3,12 +3,14 @@ package org.mericoztiryaki.domain.writer.excel;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.xmlbeans.impl.store.Cur;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.result.HistoricalAnalyzeResult;
 import org.mericoztiryaki.domain.model.result.Report;
 
+import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.Comparator;
 import java.util.List;
@@ -42,25 +44,32 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
     }
 
     private void build(PnlHistoryUnit unit) {
-        renderTableHeader(unit);
-        renderHeaders();
-        renderHistory(unit);
+        int longestTableRowCount = getReport().getHistoricalAnalyzeResult().values().stream()
+                .mapToInt(r -> r.size()).max().getAsInt() + 2;  // 2 for headers
+
+        for (Currency currency: getSortedCurrencies()) {
+            getExcelConnector().getRowCursor().moveTo((longestTableRowCount + 5) * getSortedCurrencies().indexOf(currency));
+
+            renderTableHeader(unit, currency);
+            renderHeaders();
+            renderHistory(unit, currency);
+        }
     }
 
-    private void renderTableHeader(PnlHistoryUnit unit) {
+    private void renderTableHeader(PnlHistoryUnit unit, Currency currency) {
         getExcelConnector().createRow();
 
         getExcelConnector().cellBuilder()
-                .value(MessageFormat.format("{0} Pnl History", getPnlHistoryUnitName(unit)))
+                .value(MessageFormat.format("{0} Analyze ({1})", getPnlHistoryUnitName(unit), currency))
                 .bold(true)
                 .alignment(HorizontalAlignment.CENTER)
                 .build();
 
         getExcelConnector().getSheet().addMergedRegion(new CellRangeAddress(
-                0,
-                0,
+                getExcelConnector().getRowCursor().current(),
+                getExcelConnector().getRowCursor().current(),
                 getExcelConnector().getColCursor().getInitialIndex() + 1,
-                getExcelConnector().getColCursor().getInitialIndex() + 1 + getSortedCurrencies().size()));
+                getExcelConnector().getColCursor().getInitialIndex() + 4));
     }
 
     private void renderHeaders() {
@@ -71,16 +80,23 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
                 .bold(true)
                 .build();
 
-        for (Currency currency: getSortedCurrencies()) {
-            getExcelConnector().cellBuilder()
-                    .value(currency.toString())
-                    .bold(true)
-                    .alignment(HorizontalAlignment.RIGHT)
-                    .build();
-        }
+        getExcelConnector().cellBuilder()
+                .value("Value")
+                .bold(true)
+                .build();
+
+        getExcelConnector().cellBuilder()
+                .value("PNL")
+                .bold(true)
+                .build();
+
+        getExcelConnector().cellBuilder()
+                .value("ROI")
+                .bold(true)
+                .build();
     }
 
-    private void renderHistory(PnlHistoryUnit unit) {
+    private void renderHistory(PnlHistoryUnit unit, Currency currency) {
         for (HistoricalAnalyzeResult result: getReport().getHistoricalAnalyzeResult().get(unit)) {
             getExcelConnector().createRow();
 
@@ -89,13 +105,23 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
                     .bold(true)
                     .build();
 
-            for (Currency currency: getSortedCurrencies()) {
-                getExcelConnector().cellBuilder()
-                        .value(result.getPnl().getValue().get(currency))
-                        .currency(currency)
-                        .alignment(HorizontalAlignment.RIGHT)
-                        .build();
-            }
+            getExcelConnector().cellBuilder()
+                    .value(result.getTotalValue().getValue().get(currency))
+                    .currency(currency)
+                    .alignment(HorizontalAlignment.RIGHT)
+                    .build();
+
+            getExcelConnector().cellBuilder()
+                    .value(result.getPnl().getValue().get(currency))
+                    .currency(currency)
+                    .alignment(HorizontalAlignment.RIGHT)
+                    .build();
+
+            getExcelConnector().cellBuilder()
+                    .value(result.getRoi() == null ? BigDecimal.ZERO : result.getRoi().getValue().get(currency))
+                    .percentage(true)
+                    .alignment(HorizontalAlignment.RIGHT)
+                    .build();
         }
     }
 

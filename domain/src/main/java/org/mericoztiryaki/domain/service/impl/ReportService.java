@@ -5,7 +5,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.ReportParameters;
-import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.result.AggregatedAnalyzeResult;
@@ -19,7 +18,6 @@ import org.mericoztiryaki.domain.service.ITransactionService;
 import org.mericoztiryaki.domain.util.BigDecimalUtil;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
-import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -50,7 +48,7 @@ public class ReportService implements IReportService {
                 .collect(
                         Collectors.toMap(
                                 (unit) -> unit,
-                                (unit) -> createPnlHistory(transactions, reportParameters, unit, unit.getSize())
+                                (unit) -> createHistoricalResult(transactions, reportParameters, unit, unit.getSize())
                         )
                 );
 
@@ -147,7 +145,7 @@ public class ReportService implements IReportService {
         }
     }
 
-    private List<HistoricalAnalyzeResult> createPnlHistory(List<ITransaction> transactions, ReportParameters reportParameters, PnlHistoryUnit unit, int count) {
+    private List<HistoricalAnalyzeResult> createHistoricalResult(List<ITransaction> transactions, ReportParameters reportParameters, PnlHistoryUnit unit, int count) {
         // Group by instrument
         Map<Instrument, List<ITransaction>> groupedTransactions = transactions
                 .stream()
@@ -169,7 +167,16 @@ public class ReportService implements IReportService {
                         (p) -> new HistoricalAnalyzeResult(window.getLeft(), window.getRight())
                 );
 
+                windowCalculation.setTotalValue(QuotesUtil.add(windowCalculation.getTotalValue(), periodAnalyzer.calculateTotalValue()));
                 windowCalculation.setPnl(QuotesUtil.add(windowCalculation.getPnl(), periodAnalyzer.calculatePNL()));
+
+                if (!QuotesUtil.isZero(windowCalculation.getTotalValue())) {
+                    windowCalculation.setRoi(QuotesUtil.divide(
+                            windowCalculation.getPnl(),
+                            QuotesUtil.subtract(windowCalculation.getTotalValue(), windowCalculation.getPnl())
+                    ));
+                }
+
             });
         }
 

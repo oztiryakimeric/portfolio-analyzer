@@ -15,7 +15,12 @@ public class HistoricalAnalyzeResult {
     private final LocalDate end;
 
     @Setter
+    private Quotes totalValue = Quotes.ZERO;
+
+    @Setter
     private Quotes pnl = Quotes.ZERO;
+
+    @Setter
     private Quotes roi;
 
 }
