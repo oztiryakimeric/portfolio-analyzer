@@ -37,9 +37,6 @@ public class TextReportWriter implements ReportWriter {
         buffer.append("\n\n");
         buffer.append(renderOpenPositions(report, reportParameters));
 
-        buffer.append("\n\n");
-        buffer.append(renderPnlHistory(report.getPnlHistory().get(PnlHistoryUnit.DAY), reportParameters, "Daily Pnl History"));
-
         String result = buffer.toString();
         System.out.println(result);
 
@@ -155,29 +152,6 @@ public class TextReportWriter implements ReportWriter {
                 });
         at.addRule();
 
-        return at.render();
-    }
-
-    private String renderPnlHistory(Map<String, Quotes> pnlHistory, ReportParameters reportParameters, String tableName) {
-        AsciiTable at = new AsciiTable();
-        at.getRenderer().setCWC(new CWC_LongestWordMin(20));
-
-        at.addRule();
-        AT_Row tableHeader= at.addRow(null,tableName);
-        tableHeader.getCells().get(1).getContext().setTextAlignment(TextAlignment.CENTER);
-
-        at.addRule();
-        at.addRow("Date",withCurrencyLabel("PNL", reportParameters.getCurrency()));
-
-        pnlHistory.keySet()
-                .stream()
-                .sorted()
-                .forEach(day -> {
-                    at.addRule();
-                    at.addRow(day, pnlHistory.get(day).getValue().get(reportParameters.getCurrency()));
-                });
-
-        at.addRule();
         return at.render();
     }
 

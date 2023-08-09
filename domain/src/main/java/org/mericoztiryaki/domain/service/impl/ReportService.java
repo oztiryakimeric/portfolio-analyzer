@@ -9,6 +9,7 @@ import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.result.AggregatedAnalyzeResult;
+import org.mericoztiryaki.domain.model.result.HistoricalAnalyzeResult;
 import org.mericoztiryaki.domain.model.result.InstrumentAnalyzeResult;
 import org.mericoztiryaki.domain.model.result.Report;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
@@ -44,7 +45,7 @@ public class ReportService implements IReportService {
         AggregatedAnalyzeResult aggregatedResult = createAggregatedResult(transactions, reportParameters);
         List<InstrumentAnalyzeResult> openPositions = createOpenPositionsTable(transactions, reportParameters);
 
-        Map<PnlHistoryUnit, Map<String, Quotes>> pnlHistory = reportParameters.getPnlHistoryUnits()
+        Map<PnlHistoryUnit, List<HistoricalAnalyzeResult>> pnlHistory = reportParameters.getPnlHistoryUnits()
                 .stream()
                 .collect(
                         Collectors.toMap(
@@ -146,13 +147,13 @@ public class ReportService implements IReportService {
         }
     }
 
-    private Map<String, Quotes> createPnlHistory(List<ITransaction> transactions, ReportParameters reportParameters, PnlHistoryUnit unit, int count) {
+    private List<HistoricalAnalyzeResult> createPnlHistory(List<ITransaction> transactions, ReportParameters reportParameters, PnlHistoryUnit unit, int count) {
         // Group by instrument
         Map<Instrument, List<ITransaction>> groupedTransactions = transactions
                 .stream()
                 .collect(Collectors.groupingBy(ITransaction::getInstrument));
 
-        Map<String, Quotes> pnlSums = new LinkedHashMap<>();
+        Map<String, HistoricalAnalyzeResult> pnlSums = new LinkedHashMap<>();
 
         for (Instrument instrument: groupedTransactions.keySet()) {
             List<Pair<LocalDate, LocalDate>> priceWindows = createPriceWindows(unit, count);
@@ -163,21 +164,24 @@ public class ReportService implements IReportService {
                         groupedTransactions.get(instrument), window.getLeft(), window.getRight());
 
                 Analyzer periodAnalyzer = new Analyzer(priceService, transactionWindow, window.getRight());
-                Quotes prevSum = pnlSums.computeIfAbsent(windowId, (p) -> Quotes.ZERO);
+                HistoricalAnalyzeResult windowCalculation = pnlSums.computeIfAbsent(
+                        windowId,
+                        (p) -> new HistoricalAnalyzeResult(window.getLeft(), window.getRight())
+                );
 
-                pnlSums.put(windowId, QuotesUtil.add(prevSum, periodAnalyzer.calculatePNL()));
+                windowCalculation.setPnl(QuotesUtil.add(windowCalculation.getPnl(), periodAnalyzer.calculatePNL()));
             });
         }
 
-        return pnlSums;
+        return new ArrayList<>(pnlSums.values());
     }
 
     private List<Pair<LocalDate, LocalDate>> createPriceWindows(PnlHistoryUnit unit, int count) {
         List<Pair<LocalDate, LocalDate>> windows = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
-            LocalDate start = null;
-            LocalDate end = null;
+            LocalDate start;
+            LocalDate end;
             if (unit == PnlHistoryUnit.DAY) {
                 start = LocalDate.now().minusDays(i + 1);
                 end = LocalDate.now().minusDays(i);

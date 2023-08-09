@@ -6,6 +6,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
+import org.mericoztiryaki.domain.model.result.HistoricalAnalyzeResult;
 import org.mericoztiryaki.domain.model.result.Report;
 
 import java.text.MessageFormat;
@@ -13,22 +14,21 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PnlHistorySheetBuilder extends AbstractSheetBuilder {
+public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
 
-
-    public PnlHistorySheetBuilder(Report report, ReportParameters parameters, Workbook workbook) {
+    public HistoricalAnalyzeSheetBuilder(Report report, ReportParameters parameters, Workbook workbook) {
         super(workbook, report, parameters);
     }
 
     @Override
     public String getSheetName() {
-        return "Pnl History";
+        return "Historical Analyze";
     }
 
     @Override
     public void build() {
         List<PnlHistoryUnit> sortedHistoryUnits = getParameters().getPnlHistoryUnits().stream()
-                .sorted(Comparator.comparing(PnlHistorySheetBuilder::getPnlHistoryUnitOrder))
+                .sorted(Comparator.comparing(HistoricalAnalyzeSheetBuilder::getPnlHistoryUnitOrder))
                 .collect(Collectors.toList());
 
         sortedHistoryUnits.forEach(unit -> {
@@ -81,19 +81,17 @@ public class PnlHistorySheetBuilder extends AbstractSheetBuilder {
     }
 
     private void renderHistory(PnlHistoryUnit unit) {
-        List<String> periods = getReport().getPnlHistory().get(unit).keySet().stream().sorted().collect(Collectors.toList());
-
-        for (int i=0; i<periods.size(); i++) {
+        for (HistoricalAnalyzeResult result: getReport().getHistoricalAnalyzeResult().get(unit)) {
             getExcelConnector().createRow();
 
             getExcelConnector().cellBuilder()
-                    .value(periods.get(i))
+                    .value(MessageFormat.format("{0} -> {1}", result.getStart(), result.getEnd()))
                     .bold(true)
                     .build();
 
             for (Currency currency: getSortedCurrencies()) {
                 getExcelConnector().cellBuilder()
-                        .value(getReport().getPnlHistory().get(unit).get(periods.get(i)).getValue().get(currency))
+                        .value(result.getPnl().getValue().get(currency))
                         .currency(currency)
                         .alignment(HorizontalAlignment.RIGHT)
                         .build();

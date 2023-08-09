@@ -27,7 +27,7 @@ public class ExcelReportWriter implements ReportWriter {
         AbstractSheetBuilder openPositionsSheetBuilder = new OpenPositionsSheetBuilder(report, reportParameters, workbook);
         openPositionsSheetBuilder.build();
 
-        AbstractSheetBuilder pnlHistorySheetBuilder = new PnlHistorySheetBuilder(report, reportParameters, workbook);
+        AbstractSheetBuilder pnlHistorySheetBuilder = new HistoricalAnalyzeSheetBuilder(report, reportParameters, workbook);
         pnlHistorySheetBuilder.build();
 
         AbstractSheetBuilder transactionSheetBuilder = new TransactionSheetBuilder(workbook, report, reportParameters);
