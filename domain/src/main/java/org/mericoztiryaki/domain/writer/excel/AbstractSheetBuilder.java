@@ -36,7 +36,7 @@ public abstract class AbstractSheetBuilder {
                 .map(Objects::toString)
                 .sorted().collect(Collectors.toList());
 
-        this.sortedCurrencies = Arrays.stream(Currency.values())
+        this.sortedCurrencies = parameters.getCurrencies().stream()
                 .sorted().collect(Collectors.toList());
 
         this.sortedPeriods = parameters.getPeriods().stream()

@@ -37,7 +37,7 @@ public class App {
                 .reportDate(LocalDate.now())
                 .periods(Set.of(Period.D1, Period.W1, Period.M1, Period.ALL))
                 .pnlHistoryUnits(Set.of(PnlHistoryUnit.DAY, PnlHistoryUnit.WEEK, PnlHistoryUnit.MONTH, PnlHistoryUnit.YEAR))
-                .currency(Currency.TRY)
+                .currencies(Set.of(Currency.TRY, Currency.USD))
                 .outputType(ReportOutputType.EXCEL)
                 .outputFileLocation(Paths.get("").toAbsolutePath().toString() + "/out.xlsx")
                 .build();

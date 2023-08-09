@@ -29,8 +29,8 @@ public class ReportParametersUtil {
             reportRequest.setPnlHistoryUnits(new HashSet<>());
         }
 
-        if (reportRequest.getCurrency() == null) {
-            throw new ReportParametersException("Currency must not be empty");
+        if (reportRequest.getCurrencies() == null || reportRequest.getCurrencies().isEmpty()) {
+            throw new ReportParametersException("Currencies must not be empty");
         }
 
         if (reportRequest.getOutputType() == null) {
@@ -47,7 +47,7 @@ public class ReportParametersUtil {
                 .reportDate(reportRequest.getReportDate())
                 .periods(reportRequest.getPeriods())
                 .pnlHistoryUnits(reportRequest.getPnlHistoryUnits())
-                .currency(reportRequest.getCurrency())
+                .currencies(reportRequest.getCurrencies())
                 .filteredInstrumentTypes(reportRequest.getFilteredInstrumentTypes())
                 .outputType(reportRequest.getOutputType())
                 .outputFileLocation(reportRequest.getOutputFileLocation())

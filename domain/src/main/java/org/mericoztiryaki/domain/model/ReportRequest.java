@@ -23,7 +23,7 @@ public class ReportRequest {
 
     private Set<PnlHistoryUnit> pnlHistoryUnits;
 
-    private Currency currency;
+    private Set<Currency> currencies;
 
     private Set<InstrumentType> filteredInstrumentTypes;
 
