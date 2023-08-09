@@ -3,6 +3,7 @@ package org.mericoztiryaki.domain.service.impl;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.mericoztiryaki.domain.model.Instrument;
+import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.model.constant.Period;
@@ -159,6 +160,6 @@ public class TransactionService implements ITransactionService {
                     this.cumulativeAmount.add(transaction.getAmount()) :
                     this.cumulativeAmount.subtract(transaction.getAmount());
         }
-
     }
+
 }

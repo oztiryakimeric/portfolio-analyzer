@@ -1,6 +1,7 @@
 package org.mericoztiryaki.domain.service;
 
 import org.mericoztiryaki.domain.model.Instrument;
+import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
 import org.mericoztiryaki.domain.model.transaction.TransactionDefinition;

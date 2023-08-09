@@ -33,12 +33,7 @@ public class ReportService implements IReportService {
 
     @Override
     public Report generateReport(ReportParameters reportParameters) {
-        List<ITransaction> transactions = reportParameters.getTransactions()
-                .stream().map(def -> transactionService.buildTransactionObject(def))
-                .filter(t -> reportParameters.getFilteredInstrumentTypes() == null
-                        || reportParameters.getFilteredInstrumentTypes().contains(t.getInstrument().getInstrumentType()) )
-                .sorted(Comparator.comparing(ITransaction::getDate))
-                .collect(Collectors.toList());
+        List<ITransaction> transactions = extractTransactions(reportParameters);
 
         AggregatedAnalyzeResult aggregatedResult = createAggregatedResult(transactions, reportParameters);
         List<InstrumentAnalyzeResult> openPositions = createOpenPositionsTable(transactions, reportParameters);
@@ -53,6 +48,15 @@ public class ReportService implements IReportService {
                 );
 
         return new Report(transactions, aggregatedResult, openPositions, pnlHistory);
+    }
+
+    private List<ITransaction> extractTransactions(ReportParameters reportParameters) {
+        return reportParameters.getTransactions()
+                .stream().map(def -> transactionService.buildTransactionObject(def))
+                .filter(t -> reportParameters.getFilteredInstrumentTypes() == null
+                        || reportParameters.getFilteredInstrumentTypes().contains(t.getInstrument().getInstrumentType()) )
+                .sorted(Comparator.comparing(ITransaction::getDate))
+                .collect(Collectors.toList());
     }
 
     private List<InstrumentAnalyzeResult> createOpenPositionsTable(List<ITransaction> transactions, ReportParameters reportParameters) {
