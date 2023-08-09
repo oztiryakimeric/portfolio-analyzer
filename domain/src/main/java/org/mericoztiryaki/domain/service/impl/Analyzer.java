@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.constant.TransactionType;
 import org.mericoztiryaki.domain.model.transaction.ITransaction;
+import org.mericoztiryaki.domain.model.transaction.UnifiedTransaction;
 import org.mericoztiryaki.domain.service.IAnalyzer;
 import org.mericoztiryaki.domain.service.IPriceService;
 import org.mericoztiryaki.domain.util.BigDecimalUtil;
@@ -47,6 +48,15 @@ public class Analyzer implements IAnalyzer {
                 totalAmount = totalAmount.subtract(t.getAmount());
             }
         }
+    }
+
+    @Override
+    public Quotes calculateInitialValue() {
+        return this.transactions.stream()
+                .filter(t -> t instanceof UnifiedTransaction)
+                .findFirst()
+                .map(t -> QuotesUtil.multiply(t.getPurchasePrice(), t.getAmount()))
+                .orElse(Quotes.ZERO);
     }
 
     @Override

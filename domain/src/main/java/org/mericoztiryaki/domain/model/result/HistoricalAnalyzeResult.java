@@ -1,6 +1,5 @@
 package org.mericoztiryaki.domain.model.result;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -8,19 +7,19 @@ import org.mericoztiryaki.domain.model.Quotes;
 
 import java.time.LocalDate;
 
+@Setter
 @Getter
 @RequiredArgsConstructor
 public class HistoricalAnalyzeResult {
     private final LocalDate start;
     private final LocalDate end;
 
-    @Setter
+    private Quotes initialValue = Quotes.ZERO;
+
     private Quotes totalValue = Quotes.ZERO;
 
-    @Setter
     private Quotes pnl = Quotes.ZERO;
 
-    @Setter
-    private Quotes roi;
+    private Quotes change;
 
 }

@@ -167,13 +167,14 @@ public class ReportService implements IReportService {
                         (p) -> new HistoricalAnalyzeResult(window.getLeft(), window.getRight())
                 );
 
+                windowCalculation.setInitialValue(QuotesUtil.add(windowCalculation.getInitialValue(), periodAnalyzer.calculateInitialValue()));
                 windowCalculation.setTotalValue(QuotesUtil.add(windowCalculation.getTotalValue(), periodAnalyzer.calculateTotalValue()));
                 windowCalculation.setPnl(QuotesUtil.add(windowCalculation.getPnl(), periodAnalyzer.calculatePNL()));
 
-                if (!QuotesUtil.isZero(windowCalculation.getTotalValue())) {
-                    windowCalculation.setRoi(QuotesUtil.divide(
+                if (!QuotesUtil.isZero(windowCalculation.getInitialValue())) {
+                    windowCalculation.setChange(QuotesUtil.divide(
                             windowCalculation.getPnl(),
-                            QuotesUtil.subtract(windowCalculation.getTotalValue(), windowCalculation.getPnl())
+                            windowCalculation.getInitialValue()
                     ));
                 }
 

@@ -3,7 +3,6 @@ package org.mericoztiryaki.domain.writer.excel;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.xmlbeans.impl.store.Cur;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
@@ -91,7 +90,7 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
                 .build();
 
         getExcelConnector().cellBuilder()
-                .value("ROI")
+                .value("Change")
                 .bold(true)
                 .build();
     }
@@ -118,7 +117,7 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
                     .build();
 
             getExcelConnector().cellBuilder()
-                    .value(result.getRoi() == null ? BigDecimal.ZERO : result.getRoi().getValue().get(currency))
+                    .value(result.getChange() == null ? BigDecimal.ZERO : result.getChange().getValue().get(currency))
                     .percentage(true)
                     .alignment(HorizontalAlignment.RIGHT)
                     .build();
