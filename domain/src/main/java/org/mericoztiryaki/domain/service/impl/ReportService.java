@@ -5,6 +5,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.ReportParameters;
+import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.result.AggregatedAnalyzeResult;
@@ -182,6 +183,21 @@ public class ReportService implements IReportService {
                     ));
                 }
 
+                // Add market data
+                windowCalculation.getMarketData().put(
+                        "USD",
+                        getPriceChange(new Instrument(InstrumentType.CURRENCY, "USD"), window.getLeft(), window.getRight())
+                );
+
+                /*windowCalculation.getMarketData().put(
+                        "EUR",
+                        getPriceChange(new Instrument(InstrumentType.CURRENCY, "USD"), window.getLeft(), window.getRight())
+                );
+
+                windowCalculation.getMarketData().put(
+                        "XAU",
+                        getPriceChange(new Instrument(InstrumentType.CURRENCY, "XAU"), window.getLeft(), window.getRight())
+                );*/
             });
         }
 
@@ -220,4 +236,13 @@ public class ReportService implements IReportService {
         return windows;
     }
 
+    private Quotes getPriceChange(Instrument instrument, LocalDate start, LocalDate end) {
+        Quotes priceAtPeriodStart = priceService.getPrice(instrument, start);
+        Quotes priceAtPeriodEnd = priceService.getPrice(instrument, end);
+
+        return QuotesUtil.divide(
+                QuotesUtil.subtract(priceAtPeriodEnd, priceAtPeriodStart),
+                priceAtPeriodStart
+        );
+    }
 }

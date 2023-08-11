@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.mericoztiryaki.domain.model.Quotes;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Setter
 @Getter
@@ -22,4 +24,5 @@ public class HistoricalAnalyzeResult {
 
     private Quotes change;
 
+    private Map<String, Quotes> marketData = new LinkedHashMap<>();
 }

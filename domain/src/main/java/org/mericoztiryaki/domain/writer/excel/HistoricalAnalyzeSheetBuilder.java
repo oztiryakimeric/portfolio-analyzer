@@ -50,7 +50,7 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
             getExcelConnector().getRowCursor().moveTo((longestTableRowCount + 5) * getSortedCurrencies().indexOf(currency));
 
             renderTableHeader(unit, currency);
-            renderHeaders();
+            renderHeaders(unit);
             renderHistory(unit, currency);
         }
     }
@@ -71,7 +71,7 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
                 getExcelConnector().getColCursor().getInitialIndex() + 4));
     }
 
-    private void renderHeaders() {
+    private void renderHeaders(PnlHistoryUnit unit) {
         getExcelConnector().createRow();
 
         getExcelConnector().cellBuilder()
@@ -93,6 +93,16 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
                 .value("Change")
                 .bold(true)
                 .build();
+
+        if (!getReport().getHistoricalAnalyzeResult().isEmpty()) {
+            getReport().getHistoricalAnalyzeResult().get(unit).get(0).getMarketData().keySet()
+                    .forEach(key ->
+                            getExcelConnector().cellBuilder()
+                                    .value(key)
+                                    .bold(true)
+                                    .build()
+                    );
+        }
     }
 
     private void renderHistory(PnlHistoryUnit unit, Currency currency) {
@@ -121,6 +131,14 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
                     .percentage(true)
                     .alignment(HorizontalAlignment.RIGHT)
                     .build();
+
+            getReport().getHistoricalAnalyzeResult().get(unit).get(0).getMarketData().values()
+                    .forEach(value ->
+                            getExcelConnector().cellBuilder()
+                                    .value(value.getValue().get(currency))
+                                    .percentage(true)
+                                    .build()
+                    );
         }
     }
 
