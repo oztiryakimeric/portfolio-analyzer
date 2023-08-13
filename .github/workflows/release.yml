@@ -4,14 +4,33 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+permissions:
+  contents: write
+env:
+  build-number: ${GITHUB_RUN_NUMBER}
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Create a Release
-        uses: elgohr/Github-Release-Action@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+      - uses: actions/setup-java@v3
         with:
-          title: MyReleaseMessage
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+      - run: mvn clean package
+      - run: mkdir staging && mv app/target/*jar-with-dependencies.jar staging/pvis-${{ env.build-number }}.jar
+      - name: Upload jar
+        uses: actions/upload-artifact@v3
+        with:
+          name: Package
+          path: staging/pvis-${{ env.build-number }}.jar
+          retention-days: 1
+      - uses: ncipollo/release-action@v1
+        with:
+          name: staging/pvis-${{ env.build-number }}.jar
+          tag: staging/pvis-${{ env.build-number }}.jar
+          artifacts: staging/pvis-${{ env.build-number }}.jar
+          token: ${{ secrets.GITHUB_TOKEN }}
+
