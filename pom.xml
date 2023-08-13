@@ -120,4 +120,13 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub</name>
+      <url>https://maven.pkg.github.com/oztiryakimeric/portfolio-vis</url>
+    </repository>
+  </distributionManagement>
+
 </project>
