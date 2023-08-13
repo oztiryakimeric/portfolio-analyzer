@@ -9,15 +9,9 @@
   <name>portfolio-vis</name>
   <url>http://maven.apache.org</url>
 
-  <scm>
-    <developerConnection>scm:git:https://github.com/oztiryakimeric/portfolio-vis.git</developerConnection>
-    <tag>HEAD</tag>
-  </scm>
-
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <project.scm.id>github</project.scm.id>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -120,13 +114,5 @@
       </plugins>
     </pluginManagement>
   </build>
-
-  <distributionManagement>
-    <repository>
-      <id>github</id>
-      <name>GitHub</name>
-      <url>https://maven.pkg.github.com/oztiryakimeric/portfolio-vis</url>
-    </repository>
-  </distributionManagement>
 
 </project>
