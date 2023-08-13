@@ -19,16 +19,16 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
       - run: mvn clean package
-      - run: mkdir staging && mv app/target/*jar-with-dependencies.jar target/pvis-${{ env.build-number }}.ja
-      - uses: actions/upload-artifact@v3
+      - run: mkdir staging && mv app/target/*jar-with-dependencies.jar staging/pvis-${{ env.build-number }}.jar
+      - name: Upload jar
+        uses: actions/upload-artifact@v3
         with:
           name: Package
-          path: staging
+          path: staging/pvis-${{ env.build-number }}.jar
           retention-days: 1
-      - uses: marvinpinto/action-automatic-releases@latest
+      - uses: ncipollo/release-action@v1
         with:
-          repo_token: "${{ secrets.YOUR-GITHUB-TOKEN }}"
-          automatic_release_tag: "${{ github.run_number }}"
-          title: "Automated Build ${{ github.run_number }}"
-          prerelease: true
-          files: staging/*.jar
+          name: ${{ env.GITHUB_REF_NAME }}
+          tag: ${{ env.GITHUB_REF_NAME }}
+          artifacts: staging/pvis-${{ env.build-number }}.jar
+          token: ${{ secrets.GITHUB_TOKEN }}
