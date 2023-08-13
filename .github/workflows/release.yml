@@ -8,7 +8,6 @@ permissions:
   contents: write
 env:
   build-number: ${GITHUB_RUN_NUMBER}
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,17 +19,17 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
       - run: mvn clean package
-      - run: mkdir staging && mv app/target/*jar-with-dependencies.jar staging/pvis-${{ env.build-number }}.jar
+      - run: mkdir staging && mv app/target/*jar-with-dependencies.jar staging/pvis.jar
       - name: Upload jar
         uses: actions/upload-artifact@v3
         with:
           name: Package
-          path: staging/pvis-${{ env.build-number }}.jar
+          path: staging/pvis.jar
           retention-days: 1
       - uses: ncipollo/release-action@v1
         with:
-          name: staging/pvis-${{ env.build-number }}.jar
-          tag: staging/pvis-${{ env.build-number }}.jar
-          artifacts: staging/pvis-${{ env.build-number }}.jar
+          name: Portfolio Visualizer
+          tag: some-tag
+          artifacts: staging/pvis.jar
           token: ${{ secrets.GITHUB_TOKEN }}
 
