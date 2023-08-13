@@ -28,7 +28,7 @@ jobs:
           retention-days: 1
       - uses: ncipollo/release-action@v1
         with:
-          name: ${{ env.GITHUB_REF_NAME }}
-          tag: ${{ env.GITHUB_REF_NAME }}
+          name: staging/pvis-${{ env.build-number }}.jar
+          tag: staging/pvis-${{ env.build-number }}.jar
           artifacts: staging/pvis-${{ env.build-number }}.jar
           token: ${{ secrets.GITHUB_TOKEN }}
