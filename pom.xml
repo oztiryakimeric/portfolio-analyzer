@@ -3,7 +3,7 @@
 
   <groupId>org.mericoztiryaki</groupId>
   <artifactId>portfolio-vis</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>portfolio-vis</name>
@@ -11,7 +11,7 @@
 
   <scm>
     <developerConnection>scm:git:https://github.com/oztiryakimeric/portfolio-vis.git</developerConnection>
-    <tag>portfolio-vis-1.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
