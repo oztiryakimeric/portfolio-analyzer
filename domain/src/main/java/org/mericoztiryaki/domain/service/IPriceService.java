@@ -14,5 +14,4 @@ public interface IPriceService {
 
     Quotes calculateExchangeRates(LocalDate date, BigDecimal price, Currency source) throws PriceApiException;
 
-    void save();
 }

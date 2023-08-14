@@ -13,6 +13,7 @@ import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.port.PriceSource;
 import org.mericoztiryaki.domain.service.IPriceService;
 import org.mericoztiryaki.domain.util.Environment;
+import org.mericoztiryaki.domain.util.ExecutorManager;
 import org.mericoztiryaki.domain.util.QuotesUtil;
 
 import java.io.*;
@@ -24,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 public class PriceService implements IPriceService {
@@ -33,9 +36,7 @@ public class PriceService implements IPriceService {
 
     public PriceService(PriceSource priceSource) {
         this.priceSource = priceSource;
-        this.cache = new PriceCache();
-
-        this.cache.initialize(Environment.PRICE_CACHE_PATH);
+        this.cache = new PriceCache(Environment.PRICE_CACHE_PATH);
     }
 
     @Override
@@ -87,17 +88,20 @@ public class PriceService implements IPriceService {
         return QuotesUtil.multiply(exchangeRates, price);
     }
 
-    @Override
-    public void save() {
-        this.cache.persist(Environment.PRICE_CACHE_PATH);
-    }
-
     public class PriceCache {
+
+        private final String cacheFilePath;
+        private final ThreadPoolExecutor executor;
 
         private ConcurrentMap<CacheKey, Quotes> internalCache;
 
-        public PriceCache() {
+        public PriceCache(String cacheFilePath) {
+            this.cacheFilePath = cacheFilePath;
+            this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+            ExecutorManager.assign(this.executor);
+
             this.internalCache = new ConcurrentHashMap<>();
+            this.initialize();
         }
 
         public boolean containsKey(CacheKey key) {
@@ -105,7 +109,19 @@ public class PriceService implements IPriceService {
         }
 
         public void putAll(Map<CacheKey, Quotes> values) {
+            if (values.isEmpty()) {
+                return;
+            }
+
             internalCache.putAll(values);
+
+            // Save these values to file (async)
+            Map<CacheKey, Quotes> pricesToCache =
+                    internalCache.keySet().stream()
+                            .filter(k -> !k.getDate().isEqual(LocalDate.now()))
+                            .collect(Collectors.toMap((k) -> k, (k) -> internalCache.get(k)));
+
+            persist(pricesToCache);
         }
 
         public Quotes get(CacheKey key) {
@@ -113,16 +129,16 @@ public class PriceService implements IPriceService {
         }
 
         // Initializes cache from starting point by reading file.
-        public void initialize(String path) {
+        public void initialize() {
             System.out.println("Opening cache file.");
-            File cacheFile = new File(path);
+            File cacheFile = new File(this.cacheFilePath);
 
             if (!cacheFile.exists() || cacheFile.isDirectory()){
                 System.out.println("There is no cache file.");
                 return;
             }
 
-            try (FileInputStream fi = new FileInputStream(path);
+            try (FileInputStream fi = new FileInputStream(this.cacheFilePath);
                  ObjectInputStream oi = new ObjectInputStream(fi)){
 
                 internalCache = new ConcurrentHashMap<>((HashMap<CacheKey, Quotes>) oi.readObject());
@@ -134,23 +150,20 @@ public class PriceService implements IPriceService {
         }
 
         // Saves cache to file in order to initialize it from this point
-        public void persist(String path) {
-            // Remove curreny day's prices
-            Map<CacheKey, Quotes> pricesToCache =
-                    internalCache.keySet().stream()
-                            .filter(k -> !k.getDate().isEqual(LocalDate.now()))
-                            .collect(Collectors.toMap((k) -> k, (k) -> internalCache.get(k)));
+        public void persist(Map<CacheKey, Quotes> snapshot) {
+            executor.submit(() -> {
+                System.out.println("Price save started. Count: " + snapshot.size());
+                try (FileOutputStream f = new FileOutputStream(cacheFilePath);
+                     ObjectOutputStream o = new ObjectOutputStream(f)) {
 
-            try (FileOutputStream f = new FileOutputStream(path);
-                 ObjectOutputStream o = new ObjectOutputStream(f)) {
-
-                o.writeObject(pricesToCache);
-            } catch (IOException e) {
-                System.out.println("Cache can't saved: e" + e.getMessage());
-                e.printStackTrace();
-            }
+                    o.writeObject(snapshot);
+                    System.out.println("Prices saved. Count: " + snapshot.size());
+                } catch (IOException e) {
+                    System.out.println("Cache can't saved: e" + e.getMessage());
+                    e.printStackTrace();
+                }
+            });
         }
-
     }
 
     @Data

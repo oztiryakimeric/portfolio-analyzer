@@ -15,6 +15,7 @@ import org.mericoztiryaki.domain.port.PriceSource;
 import org.mericoztiryaki.domain.service.impl.PriceService;
 import org.mericoztiryaki.domain.service.impl.ReportService;
 import org.mericoztiryaki.domain.service.impl.TransactionService;
+import org.mericoztiryaki.domain.util.ExecutorManager;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -35,7 +36,7 @@ public class App {
 
         createReport(readReportRequest(args));
 
-        priceService.save();
+        ExecutorManager.shutdown();
         System.out.println("EDOM");
     }
 
