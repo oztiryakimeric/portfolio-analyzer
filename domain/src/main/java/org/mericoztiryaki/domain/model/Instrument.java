@@ -3,10 +3,13 @@ package org.mericoztiryaki.domain.model;
 import lombok.Data;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
 
+import java.io.Serializable;
 import java.text.MessageFormat;
 
 @Data
-public class Instrument {
+public class Instrument implements Serializable {
+
+    private static final long serialVersionUID = 1;
 
     private InstrumentType instrumentType;
 
@@ -15,14 +18,6 @@ public class Instrument {
     public Instrument(InstrumentType instrumentType, String symbol) {
         this.instrumentType = instrumentType;
         this.symbol = symbol;
-    }
-
-    public String getId() {
-        return generateId(this.instrumentType, this.symbol);
-    }
-
-    public static String generateId(InstrumentType instrumentType, String symbol) {
-        return MessageFormat.format("{0}-{1}", instrumentType, symbol);
     }
 
     @Override

@@ -35,6 +35,7 @@ public class App {
 
         createReport(readReportRequest(args));
 
+        priceService.save();
         System.out.println("EDOM");
     }
 
