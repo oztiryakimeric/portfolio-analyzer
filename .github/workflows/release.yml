@@ -19,12 +19,7 @@ jobs:
       - run: mvn clean package
       - run: mkdir staging && mv app/target/*jar-with-dependencies.jar staging/pvis-v${{ github.run_number }}.jar
       - name: Upload jar
-        uses: actions/upload-artifact@v3
-        with:
-          name: Package
-          path: staging/pvis-v${{ github.run_number }}.jar
-          retention-days: 1
-      - uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@v1
         with:
           name: Portfolio Visualizer
           tag: v${{ github.run_number }}
