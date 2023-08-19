@@ -2,6 +2,7 @@ package org.mericoztiryaki.app.adapter;
 
 import com.google.gson.Gson;
 import lombok.Data;
+import lombok.extern.log4j.Log4j2;
 import okhttp3.*;
 import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.Price;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Log4j2
 public class PriceApiAdapter implements PriceSource {
 
     @Override
@@ -44,12 +46,10 @@ public class PriceApiAdapter implements PriceSource {
         try(ResponseBody response = call.execute().body()) {
             Gson gson = new Gson();
             PriceListResponse resp =  gson.fromJson(response.string(), PriceListResponse.class);
-
             return resp.getData().stream()
                     .map(d -> new Price(d.getDay(), d.getQuotes())).collect(Collectors.toList());
         } catch (Exception e) {
-            System.out.println("Price api exception: " + url);
-            e.printStackTrace();
+            log.error("Price api exception: " + url, e);
             throw new PriceApiException(instrumentType, symbol, start, end);
         }
     }

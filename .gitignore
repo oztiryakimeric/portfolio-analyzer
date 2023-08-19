@@ -41,3 +41,4 @@ build/
 .dev-space
 
 *.xlsx
+*.log

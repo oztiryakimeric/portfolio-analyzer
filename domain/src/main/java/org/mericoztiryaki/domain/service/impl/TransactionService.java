@@ -2,6 +2,7 @@ package org.mericoztiryaki.domain.service.impl;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
@@ -23,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Log4j2
 @RequiredArgsConstructor
 public class TransactionService implements ITransactionService {
 
@@ -51,8 +53,7 @@ public class TransactionService implements ITransactionService {
                     ),
                     transactionCurrency);
         } catch (Exception e) {
-            System.out.println("Row " + definition.getIndex() + " is invalid...");
-            System.out.println(e.getLocalizedMessage());
+            log.error("Transaction row is invalid. Index: {}", definition.getIndex(), e);
             throw e;
         }
     }

@@ -3,6 +3,8 @@ package org.mericoztiryaki.domain.service.impl;
 import com.google.inject.internal.util.ImmutableMap;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
+import lombok.extern.log4j.Log4j2;
 import org.codehaus.plexus.util.CachedMap;
 import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.Instrument;
@@ -29,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
+@Log4j2
 public class PriceService implements IPriceService {
 
     private final PriceSource priceSource;
@@ -48,7 +51,7 @@ public class PriceService implements IPriceService {
             return cache.get(cacheKey);
         }
 
-        System.out.println("Price cache MISS: " + instrument + " " + date);
+        log.info("Price cache MISS: " + instrument + " " + date);
         Map<LocalDate, Quotes> response = fetchPrices(instrument, date);
 
         // Put prices to cache
@@ -130,11 +133,11 @@ public class PriceService implements IPriceService {
 
         // Initializes cache from starting point by reading file.
         public void initialize() {
-            System.out.println("Opening cache file.");
+            log.info("Using cache file: {}", this.cacheFilePath);
             File cacheFile = new File(this.cacheFilePath);
 
             if (!cacheFile.exists() || cacheFile.isDirectory()){
-                System.out.println("There is no cache file.");
+                log.warn("Cache does not exists, creating new one");
                 return;
             }
 
@@ -142,9 +145,8 @@ public class PriceService implements IPriceService {
                  ObjectInputStream oi = new ObjectInputStream(fi)){
 
                 internalCache = new ConcurrentHashMap<>((HashMap<CacheKey, Quotes>) oi.readObject());
-                System.out.println("Cache file opened.");
             } catch (Exception e) {
-                System.out.println("Cache can't read from file: " + e.getMessage());
+                log.error("Cache can't read from file", e);
                 e.printStackTrace();
             }
         }
@@ -152,14 +154,13 @@ public class PriceService implements IPriceService {
         // Saves cache to file in order to initialize it from this point
         public void persist(Map<CacheKey, Quotes> snapshot) {
             executor.submit(() -> {
-                System.out.println("Price save started. Count: " + snapshot.size());
                 try (FileOutputStream f = new FileOutputStream(cacheFilePath);
                      ObjectOutputStream o = new ObjectOutputStream(f)) {
 
                     o.writeObject(snapshot);
-                    System.out.println("Prices saved. Count: " + snapshot.size());
+                    log.debug("Prices saved. Count: {}", snapshot.size());
                 } catch (IOException e) {
-                    System.out.println("Cache can't saved: e" + e.getMessage());
+                    log.error("Cache file can't saved", e);
                     e.printStackTrace();
                 }
             });
