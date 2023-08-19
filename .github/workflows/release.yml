@@ -27,6 +27,7 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           name: Portfolio Visualizer
+          tag: ${{ github.run_number }}
           artifacts: staging/pvis${{ github.run_number }}.jar
           token: ${{ secrets.GITHUB_TOKEN }}
 
