@@ -20,6 +20,10 @@ import java.util.stream.Collectors;
 @Log4j2
 public class PriceApiAdapter implements PriceSource {
 
+    public PriceApiAdapter() {
+        log.info("PriceSource created for host: {}", Environment.PRICE_API_HOST);
+    }
+
     @Override
     public List<Price> getPriceWindow(InstrumentType instrumentType,
                                       String symbol, LocalDate start, LocalDate end) throws PriceApiException {
