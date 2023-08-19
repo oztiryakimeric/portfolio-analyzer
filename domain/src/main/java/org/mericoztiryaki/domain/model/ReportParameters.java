@@ -25,6 +25,8 @@ public class ReportParameters {
 
     private Set<InstrumentType> filteredInstrumentTypes;
 
+    private Set<String> filteredSymbols;
+
     private ReportOutputType outputType;
 
     private String outputFileLocation;

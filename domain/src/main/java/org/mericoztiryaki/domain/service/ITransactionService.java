@@ -1,5 +1,6 @@
 package org.mericoztiryaki.domain.service;
 
+import org.mericoztiryaki.domain.exception.InvalidTransactionDefinitionException;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Period;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 public interface ITransactionService {
 
-    ITransaction buildTransactionObject(TransactionDefinition definition);
+    ITransaction buildTransactionObject(TransactionDefinition definition) throws InvalidTransactionDefinitionException;
 
     Map<Instrument, List<ITransaction>> getOpenPositions(List<ITransaction> transactions);
 

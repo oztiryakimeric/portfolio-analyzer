@@ -3,10 +3,10 @@ package org.mericoztiryaki.domain.exception;
 import lombok.AllArgsConstructor;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
 
+import java.text.MessageFormat;
 import java.time.LocalDate;
 
-@AllArgsConstructor
-public class PriceApiException extends RuntimeException {
+public class PriceApiException extends ReportGenerationException {
 
     private InstrumentType instrument;
 
@@ -16,4 +16,16 @@ public class PriceApiException extends RuntimeException {
 
     private LocalDate end;
 
+    public PriceApiException(Throwable cause, InstrumentType instrument, String symbol, LocalDate start, LocalDate end) {
+        super(cause);
+        this.instrument = instrument;
+        this.symbol = symbol;
+        this.start = start;
+        this.end = end;
+    }
+
+    @Override
+    public String getMessage() {
+        return MessageFormat.format("{0} price can't accessed for window {1} - {2}", symbol, start, end);
+    }
 }

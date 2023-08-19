@@ -14,7 +14,7 @@ public class CsvReader implements PortfolioReader {
     private final String csvFilePath;
 
     @Override
-    public List<TransactionDefinition> read() throws IOException {
+    public List<TransactionDefinition> read() {
         List<List<String>> rawCsvFile = CsvUtil.readCsvFile(csvFilePath);
 
         List<TransactionDefinition> defs = new ArrayList<>();

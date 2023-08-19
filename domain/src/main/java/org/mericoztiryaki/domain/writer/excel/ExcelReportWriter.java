@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 public class ExcelReportWriter implements ReportWriter {
 
     @Override
-    public byte[] build(Report report, ReportParameters reportParameters) {
+    public byte[] build(Report report, ReportParameters reportParameters) throws ReportWriterException {
         Workbook workbook  = new XSSFWorkbook();
 
         AbstractSheetBuilder aggregatedSheetWriter = new AggregatedSheetWriter(report, reportParameters, workbook);

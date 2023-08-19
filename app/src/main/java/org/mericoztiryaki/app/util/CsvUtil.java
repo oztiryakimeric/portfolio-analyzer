@@ -1,5 +1,7 @@
 package org.mericoztiryaki.app.util;
 
+import org.mericoztiryaki.domain.exception.ReaderFailedException;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -8,7 +10,7 @@ import java.util.List;
 
 public class CsvUtil {
 
-    public static List<List<String>> readCsvFile(String filePath) throws IOException {
+    public static List<List<String>> readCsvFile(String filePath) {
         List<List<String>> data = new ArrayList<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
@@ -21,6 +23,8 @@ public class CsvUtil {
                 }
                 data.add(row);
             }
+        } catch (IOException e) {
+            throw new ReaderFailedException(e, filePath);
         }
 
         return data;

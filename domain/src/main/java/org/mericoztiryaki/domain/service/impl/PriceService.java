@@ -62,7 +62,7 @@ public class PriceService implements IPriceService {
         return response.get(date);
     }
 
-    private Map<LocalDate, Quotes> fetchPrices(Instrument instrument, LocalDate date) {
+    private Map<LocalDate, Quotes> fetchPrices(Instrument instrument, LocalDate date) throws PriceApiException {
         List<Price> response = priceSource.getPriceWindow(instrument.getInstrumentType(), instrument.getSymbol(),
                 date.minusDays(60), date.plusDays(60));
 

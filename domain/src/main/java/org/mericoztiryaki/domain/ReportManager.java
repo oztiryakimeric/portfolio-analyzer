@@ -2,6 +2,7 @@ package org.mericoztiryaki.domain;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.mericoztiryaki.domain.exception.ReportGenerationException;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.ReportRequest;
 import org.mericoztiryaki.domain.model.result.Report;
@@ -16,7 +17,7 @@ public class ReportManager {
 
     private final ReportService reportService;
 
-    public void generateReport(ReportRequest reportRequest) {
+    public void generateReport(ReportRequest reportRequest) throws ReportGenerationException {
         log.info("Report creation started");
 
         ReportParameters parameters = ReportParametersUtil.validateReportRequest(reportRequest);

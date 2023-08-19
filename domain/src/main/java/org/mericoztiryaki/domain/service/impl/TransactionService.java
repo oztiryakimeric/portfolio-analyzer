@@ -3,6 +3,8 @@ package org.mericoztiryaki.domain.service.impl;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.mericoztiryaki.domain.exception.InvalidTransactionDefinitionException;
+import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
@@ -31,7 +33,7 @@ public class TransactionService implements ITransactionService {
     private final IPriceService priceService;
 
     @Override
-    public ITransaction buildTransactionObject(TransactionDefinition definition) {
+    public ITransaction buildTransactionObject(TransactionDefinition definition) throws InvalidTransactionDefinitionException, PriceApiException {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
@@ -54,7 +56,7 @@ public class TransactionService implements ITransactionService {
                     transactionCurrency);
         } catch (Exception e) {
             log.error("Transaction row is invalid. Index: {}", definition.getIndex(), e);
-            throw e;
+            throw new InvalidTransactionDefinitionException(e, definition.getIndex());
         }
     }
 
@@ -74,7 +76,7 @@ public class TransactionService implements ITransactionService {
     }
 
     @Override
-    public List<ITransaction> createTransactionSetByWindow(List<ITransaction> transactions, LocalDate start, LocalDate end) {
+    public List<ITransaction> createTransactionSetByWindow(List<ITransaction> transactions, LocalDate start, LocalDate end) throws PriceApiException {
         Map<Instrument, TransactionSet> transactionSets = new HashMap<>();
 
         for (ITransaction t: transactions) {

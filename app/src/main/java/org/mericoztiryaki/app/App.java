@@ -1,11 +1,14 @@
 package org.mericoztiryaki.app;
 
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.cli.*;
 import org.mericoztiryaki.app.adapter.PriceApiAdapter;
 import org.mericoztiryaki.app.reader.CsvReader;
 import org.mericoztiryaki.app.reader.PortfolioReader;
+import org.mericoztiryaki.app.util.CliParser;
 import org.mericoztiryaki.domain.ReportManager;
 import org.mericoztiryaki.domain.exception.PriceApiException;
+import org.mericoztiryaki.domain.exception.ReportGenerationException;
 import org.mericoztiryaki.domain.model.ReportRequest;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.Period;
@@ -23,6 +26,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
+@Log4j2
 public class App {
 
     private static PriceSource priceSource;
@@ -31,13 +35,16 @@ public class App {
     private static ReportService reportService;
     private static ReportManager reportManager;
 
-    public static void main(String[] args) throws IOException, ParseException {
-        initializeBeans();
+    public static void main(String[] args) {
+        try {
+            initializeBeans();
 
-        createReport(readReportRequest(args));
-
-        ExecutorManager.shutdown();
-        System.out.println("EDOM");
+            createReport(CliParser.buildReportRequest(args));
+        } catch (ReportGenerationException e) {
+            log.error(e.getMessage());
+        } finally {
+            ExecutorManager.shutdown();
+        }
     }
 
     private static void initializeBeans() {
@@ -48,43 +55,7 @@ public class App {
         reportManager = new ReportManager(reportService);
     }
 
-    private static ReportRequest readReportRequest(String[] args) throws ParseException {
-        CommandLineParser parser = new DefaultParser();
-
-        Options options = new Options();
-        options.addOption(Option.builder()
-                .option("d")
-                .longOpt("date")
-                .hasArg()
-                .desc("Date the report will be generated")
-                .build());
-
-        options.addOption(Option.builder()
-                .option("i")
-                .longOpt("input-file")
-                .hasArg()
-                .required()
-                .desc("Csv file path which transactions defined in")
-                .build());
-
-        ReportRequest reportRequest = ReportRequest.getDefaultReportRequest();
-        CommandLine line = parser.parse(options, args);
-
-        if (line.hasOption("date")) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("DD-MM-YYYY");
-            LocalDate date = LocalDate.parse(line.getOptionValue("date"), formatter);
-
-            reportRequest.setReportDate(date);
-        }
-
-        if (line.hasOption("input-file")) {
-            reportRequest.setInputFileLocation(line.getOptionValue("input-file"));
-        }
-
-        return reportRequest;
-    }
-
-    private static void createReport(ReportRequest reportRequest) throws IOException {
+    private static void createReport(ReportRequest reportRequest) throws ReportGenerationException {
         PortfolioReader csvReader = new CsvReader(reportRequest.getInputFileLocation());
         reportRequest.setTransactions(csvReader.read());
 

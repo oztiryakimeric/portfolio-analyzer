@@ -2,6 +2,8 @@ package org.mericoztiryaki.domain.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
+import org.mericoztiryaki.domain.exception.InvalidTransactionDefinitionException;
+import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.Quotes;
 import org.mericoztiryaki.domain.model.ReportParameters;
@@ -51,16 +53,18 @@ public class ReportService implements IReportService {
         return new Report(transactions, aggregatedResult, openPositions, pnlHistory);
     }
 
-    private List<ITransaction> extractTransactions(ReportParameters reportParameters) {
+    private List<ITransaction> extractTransactions(ReportParameters reportParameters) throws InvalidTransactionDefinitionException {
         return reportParameters.getTransactions()
                 .stream().map(def -> transactionService.buildTransactionObject(def))
                 .filter(t -> reportParameters.getFilteredInstrumentTypes() == null
-                        || reportParameters.getFilteredInstrumentTypes().contains(t.getInstrument().getInstrumentType()) )
+                        || !reportParameters.getFilteredInstrumentTypes().contains(t.getInstrument().getInstrumentType()))
+                .filter(t -> reportParameters.getFilteredSymbols() == null
+                        || !reportParameters.getFilteredSymbols().contains(t.getInstrument().getSymbol()))
                 .sorted(Comparator.comparing(ITransaction::getDate))
                 .collect(Collectors.toList());
     }
 
-    private List<InstrumentAnalyzeResult> createOpenPositionsTable(List<ITransaction> transactions, ReportParameters reportParameters) {
+    private List<InstrumentAnalyzeResult> createOpenPositionsTable(List<ITransaction> transactions, ReportParameters reportParameters) throws PriceApiException {
         return transactionService.getOpenPositions(transactions)
                 .entrySet()
                 .stream()
@@ -93,7 +97,7 @@ public class ReportService implements IReportService {
                 .collect(Collectors.toList());
     }
 
-    private AggregatedAnalyzeResult createAggregatedResult(List<ITransaction> transactions, ReportParameters reportParameters) {
+    private AggregatedAnalyzeResult createAggregatedResult(List<ITransaction> transactions, ReportParameters reportParameters) throws PriceApiException {
         AggregatedAnalyzeResult rootResult = new AggregatedAnalyzeResult("Total");
 
         // Group by instrument
@@ -150,7 +154,7 @@ public class ReportService implements IReportService {
         }
     }
 
-    private List<HistoricalAnalyzeResult> createHistoricalResult(List<ITransaction> transactions, ReportParameters reportParameters, PnlHistoryUnit unit, int count) {
+    private List<HistoricalAnalyzeResult> createHistoricalResult(List<ITransaction> transactions, ReportParameters reportParameters, PnlHistoryUnit unit, int count) throws PriceApiException {
         // Group by instrument
         Map<Instrument, List<ITransaction>> groupedTransactions = transactions
                 .stream()
@@ -236,7 +240,7 @@ public class ReportService implements IReportService {
         return windows;
     }
 
-    private Quotes getPriceChange(Instrument instrument, LocalDate start, LocalDate end) {
+    private Quotes getPriceChange(Instrument instrument, LocalDate start, LocalDate end) throws PriceApiException {
         Quotes priceAtPeriodStart = priceService.getPrice(instrument, start);
         Quotes priceAtPeriodEnd = priceService.getPrice(instrument, end);
 

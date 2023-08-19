@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface PortfolioReader {
 
-    List<TransactionDefinition> read() throws IOException;
+    List<TransactionDefinition> read();
 
 }

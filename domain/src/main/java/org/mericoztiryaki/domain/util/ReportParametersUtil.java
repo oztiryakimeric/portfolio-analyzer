@@ -12,7 +12,7 @@ import java.util.Set;
 
 public class ReportParametersUtil {
 
-    public static ReportParameters validateReportRequest(ReportRequest reportRequest) {
+    public static ReportParameters validateReportRequest(ReportRequest reportRequest) throws ReportParametersException {
         if (reportRequest.getTransactions() == null || reportRequest.getTransactions().isEmpty()) {
             throw new ReportParametersException("Transactions must not be empty");
         }

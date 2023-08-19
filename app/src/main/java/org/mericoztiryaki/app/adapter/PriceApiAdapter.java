@@ -54,7 +54,7 @@ public class PriceApiAdapter implements PriceSource {
                     .map(d -> new Price(d.getDay(), d.getQuotes())).collect(Collectors.toList());
         } catch (Exception e) {
             log.error("Price api exception: " + url, e);
-            throw new PriceApiException(instrumentType, symbol, start, end);
+            throw new PriceApiException(e, instrumentType, symbol, start, end);
         }
     }
 
