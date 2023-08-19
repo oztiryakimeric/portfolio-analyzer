@@ -23,4 +23,3 @@ jobs:
           tag: v${{ github.run_number }}
           artifacts: staging/pvis-v${{ github.run_number }}.jar
           token: ${{ secrets.GITHUB_TOKEN }}
-
