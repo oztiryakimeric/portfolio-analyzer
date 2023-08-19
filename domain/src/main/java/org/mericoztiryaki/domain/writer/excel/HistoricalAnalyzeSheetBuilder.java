@@ -68,7 +68,7 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
                 getExcelConnector().getRowCursor().current(),
                 getExcelConnector().getRowCursor().current(),
                 getExcelConnector().getColCursor().getInitialIndex() + 1,
-                getExcelConnector().getColCursor().getInitialIndex() + 4));
+                getExcelConnector().getColCursor().getInitialIndex() + 6));
     }
 
     private void renderHeaders(PnlHistoryUnit unit) {
@@ -98,7 +98,7 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
             getReport().getHistoricalAnalyzeResult().get(unit).get(0).getMarketData().keySet()
                     .forEach(key ->
                             getExcelConnector().cellBuilder()
-                                    .value(key)
+                                    .value(key + " Change")
                                     .bold(true)
                                     .build()
                     );
@@ -132,7 +132,7 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
                     .alignment(HorizontalAlignment.RIGHT)
                     .build();
 
-            getReport().getHistoricalAnalyzeResult().get(unit).get(0).getMarketData().values()
+            result.getMarketData().values()
                     .forEach(value ->
                             getExcelConnector().cellBuilder()
                                     .value(value.getValue().get(currency))
