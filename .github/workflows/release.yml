@@ -1,9 +1,7 @@
-name: Java CI to create and upload release on pull request
+name: Create realse jar
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "release" ]
 permissions:
   contents: write
 jobs:
