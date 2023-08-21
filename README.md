@@ -18,7 +18,28 @@ Portfolio Analyzer is an open-source Java project that enables you to generate d
 
 ## Usage
 
-Coming soon 🏗️
+You have to define your transactions in a csv file with following format:
+
+| date (dd/MM/yyyy HH:mm:ss) | instrument type (BIST \| FUND \| CURRENCY) | symbol | transaction type (BUY \| SELL) | amount | price | fee | currency (TRY, USD, EUR) |
+|----------------------------|--------------------------------------------|--------|--------------------------------|--------|-------|-----|--------------------------|
+| 01/01/2023 10:30:00        | BIST                                       | FENER  | BUY                            | 10     | 45    | 5   | TRY                      |
+| 15/01/2023 10:30:00        | BIST                                       | FENER  | BUY                            | 5      | 50    | 5   | TRY                      |
+
+
+Run to create report with default parameters;
+```
+java -jar pa.jar -i <csv-file-location>
+```
+
+**CLI Parameters**
+|  Parameter | Description  |
+|---|---|
+| -i --input-file (Required)      | Csv file path which transactions defined in                                                                     |
+| -d --date                       | Date the report will be generated                                                                               |
+| -c --currency                   | Currencies in which the reports will be created (separated by comma)                                            |
+| -fi --filtered-instrument-types | Instrument types that will not be included in the calculation when calculating the report (separated by comma)  |
+| -fs --filtered-symbols          | Symbols that will not be included in the calculation when calculating the report (separated by comma)           |
+| -o --output-file                | Output file path                                                                                                |
 
 ## Contributing 💞
 
