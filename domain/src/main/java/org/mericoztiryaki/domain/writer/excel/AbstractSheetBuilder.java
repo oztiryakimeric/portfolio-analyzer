@@ -7,6 +7,7 @@ import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.result.Report;
+import org.mericoztiryaki.domain.model.transaction.ITransaction;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -32,7 +33,10 @@ public abstract class AbstractSheetBuilder {
         this.report = report;
         this.parameters = parameters;
 
-        this.sortedInstrumentTypes = Arrays.stream(InstrumentType.values())
+        this.sortedInstrumentTypes = report.getTransactions()
+                .stream()
+                .map(t -> t.getInstrument().getInstrumentType())
+                .distinct()
                 .filter(i -> !parameters.getFilteredInstrumentTypes().contains(i))
                 .map(Objects::toString)
                 .sorted().collect(Collectors.toList());
