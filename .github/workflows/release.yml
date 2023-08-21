@@ -1,4 +1,4 @@
-name: Create realse jar
+name: Create release jar
 on:
   pull_request:
     branches: [ "release" ]
@@ -15,12 +15,12 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
       - run: mvn clean package
-      - run: mkdir staging && mv app/target/*jar-with-dependencies.jar staging/pvis-v${{ github.run_number }}.jar
+      - run: mkdir staging && mv app/target/*jar-with-dependencies.jar staging/pa-v${{ github.run_number }}.jar
       - name: Upload jar
         uses: ncipollo/release-action@v1
         with:
-          name: Portfolio Visualizer
+          name: Portfolio Analyzer
           tag: v${{ github.run_number }}
-          artifacts: staging/pvis-v${{ github.run_number }}.jar
+          artifacts: staging/pa-v${{ github.run_number }}.jar
           token: ${{ secrets.GITHUB_TOKEN }}
 

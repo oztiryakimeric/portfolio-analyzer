@@ -49,6 +49,7 @@ public class ReportParametersUtil {
                 .pnlHistoryUnits(reportRequest.getPnlHistoryUnits())
                 .currencies(reportRequest.getCurrencies())
                 .filteredInstrumentTypes(reportRequest.getFilteredInstrumentTypes())
+                .filteredSymbols(reportRequest.getFilteredSymbols())
                 .outputType(reportRequest.getOutputType())
                 .outputFileLocation(reportRequest.getOutputFileLocation())
                 .build();

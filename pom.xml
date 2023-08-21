@@ -2,11 +2,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.mericoztiryaki</groupId>
-  <artifactId>portfolio-vis</artifactId>
+  <artifactId>portfolio-analyzer</artifactId>
   <version>1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>portfolio-vis</name>
+  <name>portfolio-analyzer</name>
   <url>http://maven.apache.org</url>
 
   <properties>
