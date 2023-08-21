@@ -1,4 +1,4 @@
-name: Create realse jar
+name: Create release jar
 on:
   pull_request:
     branches: [ "release" ]
@@ -19,7 +19,7 @@ jobs:
       - name: Upload jar
         uses: ncipollo/release-action@v1
         with:
-          name: Portfolio Visualizer
+          name: Portfolio Analyzer
           tag: v${{ github.run_number }}
           artifacts: staging/pa-v${{ github.run_number }}.jar
           token: ${{ secrets.GITHUB_TOKEN }}
