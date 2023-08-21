@@ -2,6 +2,8 @@
 
 Portfolio Analyzer is an open-source Java project that enables you to generate detailed Excel reports for analyzing financial portfolios. Whether you're managing investments in the stock market, mutual funds, or precious metals, this project provides comprehensive analytics to help you make informed decisions.
 
+- Check the example report: [example-report.xlsx](https://docs.google.com/spreadsheets/d/12m0i6IegBx6-dQrmbd2Bu1LXfq0dnfzXloUx9o0m8xk/edit?usp=sharing ) 
+
 ## Features 🔥
 
 - **Overall Analysis:** Get an overview of your portfolio's performance, including profit/loss and return on investment (ROI).
