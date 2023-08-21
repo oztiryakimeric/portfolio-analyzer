@@ -20,7 +20,6 @@ public class Environment {
         } catch (IOException e) {
             log.fatal("Properties file can't opened, default values will be used.");
         }
-        System.out.println(properties.getProperty("mero"));
     }
 
     public static final String PRICE_API_HOST = readEnvVariable("PRICE_API_HOST", "http://127.0.0.1:8000");

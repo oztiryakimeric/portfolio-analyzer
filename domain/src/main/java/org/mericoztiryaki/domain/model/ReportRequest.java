@@ -8,6 +8,7 @@ import org.mericoztiryaki.domain.model.transaction.TransactionDefinition;
 
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -30,6 +31,8 @@ public class ReportRequest {
 
     private Set<InstrumentType> filteredInstrumentTypes;
 
+    private Set<String> filteredSymbols;
+
     private ReportOutputType outputType;
 
     private String outputFileLocation;
@@ -41,6 +44,8 @@ public class ReportRequest {
                 .currencies(Set.of(Currency.USD, Currency.TRY))
                 .pnlHistoryUnits(Set.of(PnlHistoryUnit.DAY, PnlHistoryUnit.WEEK, PnlHistoryUnit.MONTH, PnlHistoryUnit.YEAR))
                 .periods(Set.of(Period.D1, Period.W1, Period.M1, Period.ALL))
+                .filteredInstrumentTypes(new HashSet<>())
+                .filteredSymbols(new HashSet<>())
                 .outputType(ReportOutputType.EXCEL)
                 .outputFileLocation(Paths.get("").toAbsolutePath().toString() + "/report.xlsx")
                 .build();

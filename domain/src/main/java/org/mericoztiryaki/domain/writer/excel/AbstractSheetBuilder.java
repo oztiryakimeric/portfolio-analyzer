@@ -33,6 +33,7 @@ public abstract class AbstractSheetBuilder {
         this.parameters = parameters;
 
         this.sortedInstrumentTypes = Arrays.stream(InstrumentType.values())
+                .filter(i -> !parameters.getFilteredInstrumentTypes().contains(i))
                 .map(Objects::toString)
                 .sorted().collect(Collectors.toList());
 
