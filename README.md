@@ -2,6 +2,8 @@
 
 Portfolio Analyzer is an open-source Java project that enables you to generate detailed Excel reports for analyzing financial portfolios. Whether you're managing investments in the stock market, mutual funds, or precious metals, this project provides comprehensive analytics to help you make informed decisions.
 
+- Check the example report: [example-report.xlsx](https://docs.google.com/spreadsheets/d/12m0i6IegBx6-dQrmbd2Bu1LXfq0dnfzXloUx9o0m8xk/edit?usp=sharing ) 
+
 ## Features 🔥
 
 - **Overall Analysis:** Get an overview of your portfolio's performance, including profit/loss and return on investment (ROI).
@@ -18,7 +20,28 @@ Portfolio Analyzer is an open-source Java project that enables you to generate d
 
 ## Usage
 
-Coming soon 🏗️
+You have to define your transactions in a csv file with following format:
+
+| date (dd/MM/yyyy HH:mm:ss) | instrument type (BIST \| FUND \| CURRENCY) | symbol | transaction type (BUY \| SELL) | amount | price | fee | currency (TRY, USD, EUR) |
+|----------------------------|--------------------------------------------|--------|--------------------------------|--------|-------|-----|--------------------------|
+| 01/01/2023 10:30:00        | BIST                                       | FENER  | BUY                            | 10     | 45    | 5   | TRY                      |
+| 15/01/2023 10:30:00        | BIST                                       | FENER  | BUY                            | 5      | 50    | 5   | TRY                      |
+
+
+Run to create report with default parameters;
+```
+java -jar pa.jar -i <csv-file-location>
+```
+
+**CLI Parameters**
+|  Parameter | Description  |
+|---|---|
+| -i --input-file (Required)      | Csv file path which transactions defined in                                                                     |
+| -d --date                       | Date the report will be generated                                                                               |
+| -c --currency                   | Currencies in which the reports will be created (separated by comma)                                            |
+| -fi --filtered-instrument-types | Instrument types that will not be included in the calculation when calculating the report (separated by comma)  |
+| -fs --filtered-symbols          | Symbols that will not be included in the calculation when calculating the report (separated by comma)           |
+| -o --output-file                | Output file path                                                                                                |
 
 ## Contributing 💞
 
