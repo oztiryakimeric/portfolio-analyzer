@@ -195,7 +195,7 @@ public class ReportService implements IReportService {
 
                 windowCalculation.getMarketData().put(
                         "EUR",
-                        getPriceChange(new Instrument(InstrumentType.CURRENCY, "USD"), window.getLeft(), window.getRight())
+                        getPriceChange(new Instrument(InstrumentType.CURRENCY, "EURstat"), window.getLeft(), window.getRight())
                 );
 
             });
