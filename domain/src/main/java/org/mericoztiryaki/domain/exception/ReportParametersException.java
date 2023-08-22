@@ -1,7 +1,5 @@
 package org.mericoztiryaki.domain.exception;
 
-import java.text.MessageFormat;
-
 public class ReportParametersException extends ReportGenerationException {
 
     private String messsage;

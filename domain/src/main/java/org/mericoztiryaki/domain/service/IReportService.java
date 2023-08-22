@@ -1,6 +1,5 @@
 package org.mericoztiryaki.domain.service;
 
-import org.mericoztiryaki.domain.exception.InvalidTransactionDefinitionException;
 import org.mericoztiryaki.domain.exception.ReportGenerationException;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.result.Report;

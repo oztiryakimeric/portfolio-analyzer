@@ -1,7 +1,5 @@
 package org.mericoztiryaki.domain.exception;
 
-import java.text.MessageFormat;
-
 public class ReaderFailedException extends ReportGenerationException {
 
     private String path;

@@ -4,7 +4,6 @@ import lombok.Data;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
 
 import java.io.Serializable;
-import java.text.MessageFormat;
 
 @Data
 public class Instrument implements Serializable {

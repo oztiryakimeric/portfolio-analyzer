@@ -1,6 +1,5 @@
 package org.mericoztiryaki.domain.exception;
 
-import lombok.AllArgsConstructor;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
 
 import java.text.MessageFormat;

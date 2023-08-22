@@ -3,12 +3,10 @@ package org.mericoztiryaki.domain.util;
 import org.mericoztiryaki.domain.exception.ReportParametersException;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.ReportRequest;
-import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
 import org.mericoztiryaki.domain.model.constant.ReportOutputType;
 
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.Set;
 
 public class ReportParametersUtil {
 

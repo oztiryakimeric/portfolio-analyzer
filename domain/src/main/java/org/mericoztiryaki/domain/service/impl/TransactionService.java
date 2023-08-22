@@ -6,7 +6,6 @@ import lombok.extern.log4j.Log4j2;
 import org.mericoztiryaki.domain.exception.InvalidTransactionDefinitionException;
 import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.Instrument;
-import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
 import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.model.constant.Period;

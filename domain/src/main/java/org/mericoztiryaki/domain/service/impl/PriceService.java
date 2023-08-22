@@ -1,11 +1,7 @@
 package org.mericoztiryaki.domain.service.impl;
 
-import com.google.inject.internal.util.ImmutableMap;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import lombok.extern.log4j.Log4j2;
-import org.codehaus.plexus.util.CachedMap;
 import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.model.Instrument;
 import org.mericoztiryaki.domain.model.Price;

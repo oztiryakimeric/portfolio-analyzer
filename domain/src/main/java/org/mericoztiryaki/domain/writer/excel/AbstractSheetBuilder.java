@@ -4,12 +4,9 @@ import lombok.Getter;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.mericoztiryaki.domain.model.ReportParameters;
 import org.mericoztiryaki.domain.model.constant.Currency;
-import org.mericoztiryaki.domain.model.constant.InstrumentType;
 import org.mericoztiryaki.domain.model.constant.Period;
 import org.mericoztiryaki.domain.model.result.Report;
-import org.mericoztiryaki.domain.model.transaction.ITransaction;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;

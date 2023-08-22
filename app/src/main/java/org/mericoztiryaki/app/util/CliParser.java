@@ -1,8 +1,6 @@
 package org.mericoztiryaki.app.util;
 
 import org.apache.commons.cli.*;
-import org.apache.xmlbeans.impl.store.Cur;
-import org.mericoztiryaki.domain.exception.ReportGenerationException;
 import org.mericoztiryaki.domain.exception.ReportParametersException;
 import org.mericoztiryaki.domain.model.ReportRequest;
 import org.mericoztiryaki.domain.model.constant.Currency;
@@ -10,7 +8,8 @@ import org.mericoztiryaki.domain.model.constant.InstrumentType;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CliParser {
 

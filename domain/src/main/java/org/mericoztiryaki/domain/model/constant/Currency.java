@@ -2,7 +2,6 @@ package org.mericoztiryaki.domain.model.constant;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.formula.functions.T;
 
 @Getter
 @RequiredArgsConstructor

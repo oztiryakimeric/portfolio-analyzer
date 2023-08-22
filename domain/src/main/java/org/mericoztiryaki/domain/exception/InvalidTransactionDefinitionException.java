@@ -1,7 +1,5 @@
 package org.mericoztiryaki.domain.exception;
 
-import lombok.AllArgsConstructor;
-
 public class InvalidTransactionDefinitionException extends ReportGenerationException {
 
     private int index;

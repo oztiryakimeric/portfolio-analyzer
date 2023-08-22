@@ -1,30 +1,18 @@
 package org.mericoztiryaki.app;
 
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.cli.*;
 import org.mericoztiryaki.app.adapter.PriceApiAdapter;
 import org.mericoztiryaki.app.reader.CsvReader;
 import org.mericoztiryaki.app.reader.PortfolioReader;
 import org.mericoztiryaki.app.util.CliParser;
 import org.mericoztiryaki.domain.ReportManager;
-import org.mericoztiryaki.domain.exception.PriceApiException;
 import org.mericoztiryaki.domain.exception.ReportGenerationException;
 import org.mericoztiryaki.domain.model.ReportRequest;
-import org.mericoztiryaki.domain.model.constant.Currency;
-import org.mericoztiryaki.domain.model.constant.Period;
-import org.mericoztiryaki.domain.model.constant.PnlHistoryUnit;
-import org.mericoztiryaki.domain.model.constant.ReportOutputType;
 import org.mericoztiryaki.domain.port.PriceSource;
 import org.mericoztiryaki.domain.service.impl.PriceService;
 import org.mericoztiryaki.domain.service.impl.ReportService;
 import org.mericoztiryaki.domain.service.impl.TransactionService;
 import org.mericoztiryaki.domain.util.ExecutorManager;
-
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Set;
 
 @Log4j2
 public class App {
