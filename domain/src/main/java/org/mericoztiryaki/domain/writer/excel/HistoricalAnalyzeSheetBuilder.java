@@ -94,6 +94,11 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
                 .bold(true)
                 .build();
 
+        getExcelConnector().cellBuilder()
+                .value("Cash Flow")
+                .bold(true)
+                .build();
+
         if (!getReport().getHistoricalAnalyzeResult().isEmpty()) {
             getReport().getHistoricalAnalyzeResult().get(unit).get(0).getMarketData().keySet()
                     .forEach(key ->
@@ -129,6 +134,12 @@ public class HistoricalAnalyzeSheetBuilder extends AbstractSheetBuilder {
             getExcelConnector().cellBuilder()
                     .value(result.getChange() == null ? BigDecimal.ZERO : result.getChange().getValue().get(currency))
                     .percentage(true)
+                    .alignment(HorizontalAlignment.RIGHT)
+                    .build();
+
+            getExcelConnector().cellBuilder()
+                    .value(result.getCashFlow().getValue().get(currency))
+                    .currency(currency)
                     .alignment(HorizontalAlignment.RIGHT)
                     .build();
 

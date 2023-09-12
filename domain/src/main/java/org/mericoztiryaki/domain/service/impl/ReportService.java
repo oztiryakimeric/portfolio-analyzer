@@ -179,6 +179,10 @@ public class ReportService implements IReportService {
                 windowCalculation.setInitialValue(QuotesUtil.add(windowCalculation.getInitialValue(), periodAnalyzer.calculateInitialValue()));
                 windowCalculation.setTotalValue(QuotesUtil.add(windowCalculation.getTotalValue(), periodAnalyzer.calculateTotalValue()));
                 windowCalculation.setPnl(QuotesUtil.add(windowCalculation.getPnl(), periodAnalyzer.calculatePNL()));
+                windowCalculation.setCashFlow(QuotesUtil.subtract(
+                        windowCalculation.getTotalValue(),
+                        QuotesUtil.add(windowCalculation.getInitialValue(), windowCalculation.getPnl())
+                ));
 
                 if (!QuotesUtil.isZero(windowCalculation.getInitialValue())) {
                     windowCalculation.setChange(QuotesUtil.divide(

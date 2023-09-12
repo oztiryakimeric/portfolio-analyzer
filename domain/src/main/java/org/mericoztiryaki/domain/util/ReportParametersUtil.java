@@ -15,7 +15,7 @@ public class ReportParametersUtil {
             throw new ReportParametersException("Transactions must not be empty");
         }
 
-        if (reportRequest.getReportDate().isBefore(LocalDate.now())) {
+        if (LocalDate.now().isBefore(reportRequest.getReportDate())) {
             throw new ReportParametersException("Report date must not be future");
         }
 

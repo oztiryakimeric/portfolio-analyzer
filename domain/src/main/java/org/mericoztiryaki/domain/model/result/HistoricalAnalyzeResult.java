@@ -20,6 +20,8 @@ public class HistoricalAnalyzeResult {
 
     private Quotes totalValue = Quotes.ZERO;
 
+    private Quotes cashFlow = Quotes.ZERO;
+
     private Quotes pnl = Quotes.ZERO;
 
     private Quotes change;
